@@ -1,0 +1,38 @@
+uniform vec4 vp2t;
+uniform mat4 map_rprojection;
+uniform sampler2D depthSampler;
+uniform sampler2D particleSampler;
+uniform sampler2D gradientSampler;
+uniform vec4 colors[4];
+
+in vec2 interpolatedTexCoord;
+in vec3 interpolatedVertexEye;
+in float interpolatedAge;
+
+void main()
+{
+	// Normalized screen / texture lookup coordinates
+	vec2 tlc = gl_FragCoord.xy * vp2t.xy + vp2t.zw;
+	float Zw =  texture(depthSampler, tlc).x;
+	// Denormalized eye coordinates
+	vec4 vertexEyeDN = map_rprojection * vec4(tlc, Zw, 1.0);
+	vec4 vertexEye = vertexEyeDN / vertexEyeDN.w;
+
+	float delta = interpolatedVertexEye.z - vertexEye.z;
+
+	const float bias = 0.5 / 64.0;
+	const float scale = 1.0 - 1.0 / 64.0;
+	float gradpos = bias + scale * interpolatedAge;
+	// float gradpos = interpolatedAge;
+	vec4 mask = texture (particleSampler, interpolatedTexCoord);
+	vec4 c0 = textureLod (gradientSampler, vec2(gradpos, 0.125), 0) * colors[0];
+	vec4 c1 = textureLod (gradientSampler, vec2(gradpos, 0.375), 0) * colors[1];
+	vec4 c2 = textureLod (gradientSampler, vec2(gradpos, 0.625), 0) * colors[2];
+	vec4 c3 = textureLod (gradientSampler, vec2(gradpos, 0.875), 0) * colors[3];
+	vec3 color = mask.r * c0.rgb + mask.g * c1.rgb + mask.b * c2.rgb;
+	float alpha = mask.a * c3.a;
+
+	alpha *= clamp (delta, 0.0, 1.0);
+
+	gl_FragData[0] = vec4(color, alpha);
+}

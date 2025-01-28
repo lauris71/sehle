@@ -1,0 +1,88 @@
+#ifndef HAS_COLORS
+#define HAS_COLORS 0
+#endif
+#ifndef HAS_DIFFUSE_TEXTURE
+#define HAS_DIFFUSE_TEXTURE 0
+#endif
+#ifndef HAS_NORMAL_TEXTURE
+#define HAS_NORMAL_TEXTURE 0
+#endif
+#ifndef HAS_SPECULAR_TEXTURE
+#define HAS_SPECULAR_TEXTURE 0
+#endif
+#ifndef HAS_AMBIENT_TEXTURE
+#define HAS_AMBIENT_TEXTURE 0
+#endif
+#ifndef HAS_SKIN
+#define HAS_SKIN 0
+#endif
+
+#define HAS_TEXTURE (HAS_DIFFUSE_TEXTURE || HAS_NORMAL_TEXTURE || HAS_SPECULAR_TEXTURE || HAS_AMBIENT_TEXTURE)
+
+in vec3 vertex;
+in vec3 normal;
+
+uniform mat4 o2v_projection;
+uniform mat4x3 o2v;
+
+out vec3 interpolatedVertexEye;
+out vec3 interpolatedNormalEye;
+
+#if HAS_COLORS
+in vec4 color;
+out vec4 interpolatedColor;
+#endif
+
+#if HAS_TEXTURE
+in vec2 texcoord;
+out vec2 interpolatedTexCoord;
+#endif
+
+#if HAS_AMBIENT_TEXTURE
+in vec2 texcoord1;
+out vec2 interpolatedTexCoordAmbient;
+#endif
+
+#if HAS_SKIN
+in vec4 bones;
+in vec4 weights;
+uniform mat4x3[32] as2s;
+void apply_skin (vec3 vertex, vec3 normal, vec4 bones, vec4 weights, out vec3 anim_vertex, out vec3 anim_normal)
+{
+	anim_vertex =
+	weights[0] * as2s[int(bones[0])] * vec4(vertex, 1.0) +
+	weights[1] * as2s[int(bones[1])] * vec4(vertex, 1.0) +
+	weights[2] * as2s[int(bones[2])] * vec4(vertex, 1.0) +
+	weights[3] * as2s[int(bones[3])] * vec4(vertex, 1.0);
+	anim_normal =
+	weights[0] * as2s[int(bones[0])] * vec4(normal, 0.0) +
+	weights[1] * as2s[int(bones[1])] * vec4(normal, 0.0) +
+	weights[2] * as2s[int(bones[2])] * vec4(normal, 0.0) +
+	weights[3] * as2s[int(bones[3])] * vec4(normal, 0.0);
+}
+#endif
+
+void main ()
+{
+#if HAS_SKIN
+	vec3 skin_vert, skin_norm;
+	apply_skin (vertex, normal, bones, weights, skin_vert, skin_norm);
+	vec4 anim_vert = vec4(skin_vert, 1.0);
+	vec4 anim_norm = vec4(skin_norm, 0.0);
+#else
+	vec4 anim_vert = vec4(vertex, 1.0);
+	vec4 anim_norm = vec4(normal, 0.0);
+#endif
+	gl_Position = o2v_projection * anim_vert;
+	interpolatedVertexEye = o2v * anim_vert;
+	interpolatedNormalEye = o2v * anim_norm;
+#if HAS_COLORS
+	interpolatedColor = color;
+#endif
+#if HAS_TEXTURE
+	interpolatedTexCoord = texcoord;
+#endif
+#if HAS_AMBIENT_TEXTURE
+	interpolatedTexCoordAmbient = texcoord1;
+#endif
+}

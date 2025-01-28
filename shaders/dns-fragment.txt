@@ -1,0 +1,199 @@
+#ifndef HAS_COLORS
+#define HAS_COLORS 0
+#endif
+#ifndef HAS_DIFFUSE_TEXTURE
+#define HAS_DIFFUSE_TEXTURE 0
+#endif
+#ifndef HAS_NORMAL_TEXTURE
+#define HAS_NORMAL_TEXTURE 0
+#endif
+#ifndef HAS_SPECULAR_TEXTURE
+#define HAS_SPECULAR_TEXTURE 0
+#endif
+#ifndef HAS_AMBIENT_TEXTURE
+#define HAS_AMBIENT_TEXTURE 0
+#endif
+
+#define HAS_TEXTURE (HAS_DIFFUSE_TEXTURE || HAS_NORMAL_TEXTURE || HAS_SPECULAR_TEXTURE || HAS_AMBIENT_TEXTURE)
+
+uniform vec4 diffuse;
+uniform float shininess;
+
+in vec3 interpolatedVertexEye;
+in vec3 interpolatedNormalEye;
+
+#if HAS_COLORS
+in vec4 interpolatedColor;
+#endif
+
+#if HAS_TEXTURE
+in vec2 interpolatedTexCoord;
+#endif
+
+#if HAS_DIFFUSE_TEXTURE
+uniform sampler2D colorSampler;
+#endif
+
+#if HAS_NORMAL_TEXTURE
+uniform sampler2D normalSampler;
+#endif
+
+#if HAS_SPECULAR_TEXTURE
+uniform sampler2D specularSampler;
+#else
+uniform vec4 specular;
+#endif
+
+#if HAS_AMBIENT_TEXTURE
+uniform sampler2D ambientSampler;
+out vec2 interpolatedTexCoordAmbient;
+#else
+uniform float ambient;
+#endif
+
+#if HAS_NORMAL_TEXTURE
+mat3 findTangentSpace (vec3 vEye, vec3 nEyeNormalized, vec2 tCoord);
+#endif
+
+#ifdef BLEND
+#define NUM_LIGHTS 4
+uniform vec3 light_ambient[NUM_LIGHTS];
+uniform vec3 light_diffuse[NUM_LIGHTS];
+uniform vec3 light_direct[NUM_LIGHTS];
+/* W = 0 for directional light */
+uniform vec4 light_pos[NUM_LIGHTS];
+/* Negative Z of light matrix */
+uniform vec3 light_dir[NUM_LIGHTS];
+/* min_distance, outer_radius, delta, power */
+uniform vec4 point_attenuation[NUM_LIGHTS];
+/* outer_cos, delta, power */
+uniform vec3 spot_attenuation[NUM_LIGHTS];
+#endif
+
+/*
+ * Output
+ */
+
+#ifdef GBUFFER
+void encodeGBuffer (vec3 normal, vec3 diffuse, float ambientfactor, vec3 specular, float shininess);
+#endif
+#ifdef BLEND
+out vec4 color_fragment;
+void lighting (vec3 normal, vec4 materialDiffuse, float ambientfactor, vec4 specular, float shininess);
+#endif
+#ifdef DENSITY
+out vec4 color_fragment;
+#endif
+
+void clip (vec3 Ce, vec4 plane)
+{
+	float pos = dot (Ce, plane.xyz) + plane.w;
+	if (pos < 0.0) {
+		discard;
+	}
+}
+
+uniform vec4 clip_plane;
+
+void main()
+{
+	// Manual clipping for reflections
+	clip (interpolatedVertexEye, clip_plane);
+
+	// Diffuse
+	vec4 materialDiffuse = diffuse;
+#if HAS_COLORS
+	materialDiffuse *= interpolatedColor;
+#endif
+#if HAS_DIFFUSE_TEXTURE
+	materialDiffuse *= texture (colorSampler, interpolatedTexCoord);
+#endif
+	if (materialDiffuse.a < 0.03125) {
+		discard;
+	}
+
+	// Specular
+#if HAS_SPECULAR_TEXTURE
+	vec4 specular = texture (specularSampler, interpolatedTexCoord);
+#endif
+
+	// Normal
+	vec3 normal = normalize (interpolatedNormalEye);
+#if HAS_NORMAL_TEXTURE
+	vec3 n = normalize (texture (normalSampler, interpolatedTexCoord).xyz * 2.0 - 1.0);
+	mat3 tSpace = findTangentSpace (interpolatedVertexEye, normal, interpolatedTexCoord);
+	normal = tSpace * n;
+#endif
+
+#if HAS_AMBIENT_TEXTURE
+	float ambient = texture(ambientSampler, interpolatedTexCoordAmbient).r;
+#endif
+
+#ifdef GBUFFER
+	encodeGBuffer (normal, materialDiffuse.rgb, ambient, specular.rgb, shininess);
+#endif
+#ifdef BLEND
+	lighting (normal, materialDiffuse, ambient, specular, shininess);
+#endif
+#ifdef DENSITY
+	color_fragment = materialDiffuse;
+	//color_fragment = vec4(1.0, 0.5, 0.0, 1.0);
+#endif
+}
+
+#ifdef BLEND
+float
+point_intensity (int light, vec3 vertex2Light)
+{
+	float dist = length (vertex2Light);
+	if (dist < point_attenuation[light][0]) discard;
+	float s = clamp ((point_attenuation[light][1] - dist) / point_attenuation[light][2], 0.001, 1.0);
+	return pow (s, point_attenuation[light][3]);
+}
+
+float
+spot_intensity (int light, vec3 vertex2LightNormalized)
+{
+	float decay_cos = dot (-vertex2LightNormalized, light_dir[light]);
+	if (decay_cos < spot_attenuation[light][0]) discard;
+	float s = clamp ((decay_cos - spot_attenuation[light][0]) / spot_attenuation[light][1], 0.001, 1.0);
+	return pow (s, spot_attenuation[light][2]);
+}
+
+vec3
+ambient_light (int light, float light_intensity)
+{
+	return light_intensity * light_ambient[light];
+}
+
+
+void
+lighting (vec3 normal, vec4 materialDiffuse, float ambientfactor, vec4 specular, float shininess)
+{
+	//vec3 vertex2Light = lightpos - vertexEye;
+	//vec3 vertex2Light = -lightdir;
+
+	//float source = point_intensity (vertex2Light);
+	//if (source < 0.001) discard;
+
+	vec3 eye2Vertex = -interpolatedVertexEye;
+	vec3 eye2VertexNormalized = normalize (eye2Vertex);
+	//vec3 vertex2LightNormalized = normalize (vertex2Light);
+
+	//source *= spot_intensity (vertex2LightNormalized);
+
+	// Ambient
+	//vec3 light = ambient_light (source, materialDiffuse);
+
+	vec3 light_intensity = vec3(0.0, 0.0, 0.0);
+	for (int light = 0; light < 4; light++) {
+		vec3 vertex2Light = light_pos[light].xyz - light_pos[light].w * interpolatedVertexEye;
+		vec3 vertex2LightNormalized = normalize (vertex2Light);
+		float source = point_intensity (light, vertex2Light);
+		source *= spot_intensity (light, vertex2LightNormalized);
+		light_intensity += ambient_light (light, source);
+	}
+	vec4 color = vec4(materialDiffuse.rgb * light_intensity, materialDiffuse.a);
+	color_fragment = color;
+}
+#endif

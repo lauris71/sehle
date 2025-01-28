@@ -1,0 +1,75 @@
+#if MAP_1
+#define NUM_MAPS 2
+#define NUM_TEXTURES 9
+#else
+#define NUM_MAPS 1
+#define NUM_TEXTURES 5
+#endif
+#ifndef NOISE
+#define NOISE 0
+#endif
+
+uniform vec4 clip_plane;
+uniform sampler2D mapSampler[NUM_MAPS];
+#if NOISE
+uniform sampler2D noiseSampler;
+#endif
+uniform sampler2D textureSampler[NUM_TEXTURES];
+uniform int mapping[NUM_TEXTURES];
+uniform float scale[NUM_TEXTURES];
+
+in vec3 interpolatedVertexEye;
+in vec3 interpolatedNormalEye;
+in vec2 interpolatedTexCoord[3];
+
+void encodeGBuffer (vec3 normal, vec3 diffuse, float ambientfactor, vec3 specular, float shininess);
+
+void main()
+{
+	float clipPos = dot (interpolatedVertexEye, clip_plane.xyz) + clip_plane.w;
+	if (clipPos < 0.0) {
+		discard;
+	}
+
+	// Mixing map
+	vec2 mapCoord = interpolatedTexCoord[1];
+	vec4 factors = texture (mapSampler[0], mapCoord);
+
+	// Base texture
+	vec4 materialDiffuse = texture (textureSampler[0], interpolatedTexCoord[mapping[0]] * scale[0]);
+
+	vec4 color = vec4(0.0, 0.0, 0.0, 0.0);
+	float cov = 0.0;
+
+	for (int i = 1; i < 5; i++) {
+		vec4 cc = texture (textureSampler[i], interpolatedTexCoord[mapping[i]] * scale[i]);
+		// Channels are in inverse order: ABGR
+		color += factors[4 - i] * cc;
+		cov += factors[4 - i];
+	}
+
+#if MAP_1
+	factors = texture (mapSampler[1], mapCoord);
+
+	for (int i = 0; i < 4; i++) {
+		vec4 cc = texture (textureSampler[5 + i], interpolatedTexCoord[mapping[5 + i]] * scale[5 + i]);
+		// Channels are in inverse order: ABGR
+		color += factors[3 - i] * cc;
+		cov += factors[3 - i];
+	}
+#endif
+	color /= max(cov, 1.0);
+	cov = min(cov, 1.0);
+	materialDiffuse = (1.0 - cov) * materialDiffuse + cov * color;
+
+#if NOISE
+	vec3 noise1 = 0.96 + 0.08 * texture (noiseSampler, interpolatedTexCoord[0] / 17.0).rgb;
+	vec3 noise2 = 0.9 + 0.2 * texture (noiseSampler, interpolatedTexCoord[0] / 91.0).rgb;
+	vec3 noise = (noise1 + noise2) / 2;
+	materialDiffuse.rgb *= noise;
+#endif
+
+	vec3 normal = normalize (interpolatedNormalEye);
+
+	encodeGBuffer (normal, materialDiffuse.rgb, 1.0, vec3(0.0, 0.0, 0.0), 1.0);
+}

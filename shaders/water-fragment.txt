@@ -1,0 +1,152 @@
+#ifndef DEPTH
+#define DEPTH 0
+#endif
+
+#ifndef NUM_RIPPLES
+#define NUM_RIPPLES 0
+#endif
+
+#if NUM_RIPPLES > 0
+#define HAS_RIPPLES 1
+#else
+#define HAS_RIPPLES 0
+#endif
+
+uniform vec4 w2g;
+uniform mat4 g2e_rprojection;
+uniform sampler2D depthSampler;
+uniform mat3 wave_matrix[2];
+uniform sampler2D waveSampler;
+uniform vec3 eye_object;
+uniform mat4 o2v_projection_reflection;
+uniform sampler2D reflection_sampler;
+
+#if HAS_RIPPLES
+// Center.xy, start, end
+uniform vec4 ripple_position[NUM_RIPPLES];
+// Amplitude, wavelength, phase
+uniform vec3 ripple_shape[NUM_RIPPLES];
+#endif
+
+// Water color
+uniform vec3 opaque_color;
+// Maximum visible depth
+uniform float opaque_depth;
+// Minimum water density
+uniform float min_opacity;
+// Minimum and maximum reflections
+uniform float min_reflectivity;
+uniform float max_reflectivity;
+
+in vec3 interpolatedVertexObject;
+in vec3 interpolatedVertexEye;
+
+#if DEPTH
+in float interpolatedDepth;
+#endif
+
+out vec4 color_fragment;
+
+void main()
+{
+	// Normalized screen / texture lookup coordinates
+	vec2 tlc = gl_FragCoord.xy * w2g.xy + w2g.zw;
+	float Zw =  texture(depthSampler, tlc).x;
+	// Denormalized eye coordinates
+	vec4 vertexEyeDN = g2e_rprojection * vec4(tlc, Zw, 1.0);
+	vec4 vertexEye = vertexEyeDN / vertexEyeDN.w;
+
+	float depth = interpolatedDepth;
+	// Find partial derivatives
+	vec2 dFxy = vec2(0.0, 0.0);
+
+#if HAS_RIPPLES
+	for (int i = 0; i < NUM_RIPPLES; i++) {
+		// Wave propagation vector
+		vec2 v = interpolatedVertexObject.xy - ripple_position[i].xy;
+
+		// Wave direction vector
+		vec2 Dxy = normalize (v);
+
+		// Distance from wave generator
+		float dist = length (v);
+		// Normalized length
+		float dist_norm = 6.2831853 * (dist / ripple_shape[i].y);
+		// Current angle of wave function
+		float t = dist_norm + ripple_shape[i].z;
+
+		// Current amplitude of wave function
+		float dist2 = dist * dist;
+		float amplitude = ripple_shape[i].x;
+		amplitude /= max (dist2, 1.0);
+
+		float sigm = 1.0 / (1.0 + exp (-(dist_norm - ripple_position[i].z)));
+		amplitude *= sigm;
+		sigm = 1.0 / (1.0 + exp (-(dist_norm - ripple_position[i].w)));
+		amplitude *= (1.0 - sigm);
+		// Derivative dF = sinA / cosA
+		float dF = sin (t) * amplitude;
+		// partial derivatives
+		dFxy += dF * Dxy;
+	}
+#endif
+	// Adjust with depth
+	// dFxy *= depth;
+	// Adjust with distance
+	// const float maxDistance = 50.0;
+	// dFxy *= clamp ((maxDistance - length (interpolatedVertexEye)) / maxDistance, 0.0, 1.0);
+
+	// Normal
+	vec3 wc0 = wave_matrix[0] * vec3(interpolatedVertexObject.xy, 1.0);
+	vec3 wc1 = wave_matrix[1] * vec3(interpolatedVertexObject.xy, 1.0);
+	// vec4 wcolor1 = texture(waveSampler, wc1.xy);
+	vec3 nwave0 = vec3 (2.0 * texture(waveSampler, wc0.xy).rg - 1.0, 0.0) / 2.0;
+	vec3 nwave1 = vec3 (2.0 * texture(waveSampler, wc1.xy).ba - 1.0, 0.0) / 2.0;
+
+	vec3 n = normalize (vec3(-dFxy, 1.0) + nwave0 + nwave1);
+	// vec3 n = normalize (vec3(-dFxy, 1.0));
+	// vec3 n = normalize (nwave0 + nwave1);
+	vec2 offset = n.xy * 4.0;
+	vec3 vertexObject = interpolatedVertexObject + 4.0 * vec3(offset, 0.0);
+	// vec3 vertexObject = interpolatedVertexObject;
+
+	// Reflection
+	vec3 vertex2Eye = normalize (eye_object - interpolatedVertexObject);
+	float cosT1 = dot (n, vertex2Eye);
+	float n1 = 1.0;
+	float n2 = 1.333;
+	// Reflection function
+	float c = 1.0 - cosT1;
+	float r = c * c * c * c * c;
+	// float r = c;
+	// Actual reflection
+	float R = min_reflectivity + (max_reflectivity - min_reflectivity) * r;
+
+	// Water density
+	vec3 pathInWater = vertexEye.xyz - interpolatedVertexEye;
+	float thickness = length (pathInWater) / max (cosT1 * cosT1, 0.01);
+	// float thickness = depth / max (cosT1 * cosT1, 0.01);
+	// float thickness = depth;
+	float dWater = min (thickness / opaque_depth, 1.0);
+	dWater = min_opacity + (1.0 - min_opacity) * sqrt (dWater);
+	// Premultiply
+	vec3 waterColor = opaque_color * dWater;
+
+	vec4 vClipReflection = o2v_projection_reflection * vec4(vertexObject.xy, 0.0, 1.0);
+	vec2 vDeviceReflection = vClipReflection.st / vClipReflection.q;
+	// vec2 vTextureReflection = vec2(0.5, 0.5) + 0.5 * vDeviceReflection;
+	vec2 vTextureReflection = vDeviceReflection;
+
+	vec4 skyColor = vec4(0.7, 0.8, 1.0, 1.0);
+	vec4 reflectionTextureColor = texture (reflection_sampler, vTextureReflection);
+	// Framebuffer reflection can have alpha > 1
+	// reflectionTextureColor.a = min (reflectionTextureColor.a, 1.0);
+	// vec3 reflectionColor = (1.0 - reflectionTextureColor.a) * skyColor.rgb + reflectionTextureColor.a * reflectionTextureColor.rgb;
+
+	// Combine colors
+	vec3 color = (1.0 - R) * waterColor + R * reflectionTextureColor.rgb;
+	float alpha = R + (1.0 - R) * dWater;
+
+	color_fragment = vec4(color, alpha);
+	//color_fragment = vec4(1.0, 0.0, 0.0, alpha);
+}

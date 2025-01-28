@@ -1,0 +1,47 @@
+#ifndef HAS_NORMAL
+#define HAS_NORMAL 1
+#endif
+
+#ifndef HAS_AMBIENT_OCCLUSION
+#define HAS_AMBIENT_OCCLUSION 0
+#endif
+
+#ifndef HAS_WIND
+#define HAS_WIND 0
+#endif
+
+uniform sampler2D colorSampler;
+
+in vec2 interpolatedTexCoord;
+
+#if HAS_NORMAL
+in vec3 interpolatedNormalEye;
+#else
+uniform vec3 view_normal;
+#endif
+
+#if HAS_AMBIENT_OCCLUSION
+in vec3 interpolatedAODistance;
+#endif
+
+void encodeGBuffer (vec3 normal, vec3 diffuse, float ambientfactor, vec3 specular, float shininess);
+
+void main()
+{
+	vec4 materialDiffuse = texture (colorSampler, interpolatedTexCoord);
+	if (materialDiffuse.a < 0.5) discard;
+#if HAS_NORMAL
+	vec3 normal = normalize (interpolatedNormalEye);
+#else
+	vec3 normal = view_normal;
+#endif
+
+#if HAS_AMBIENT_OCCLUSION
+	float ambient = 0.5 + 0.5 * min (length (interpolatedAODistance), 1.0);
+#else
+	float ambient = 1.0;
+#endif
+
+	encodeGBuffer (normal, materialDiffuse.rgb, ambient, vec3(0.0, 0.0, 0.0), 0.0);
+}
+

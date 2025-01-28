@@ -1,0 +1,32 @@
+in vec4 vertex;
+
+uniform mat4 o2v_projection;
+uniform float star_brightness, star_gamma;
+
+out vec4 starColor;
+
+void main()
+{
+	float z = sqrt (1.0 - vertex.x * vertex.x - vertex.y * vertex.y);
+	z *= sign (vertex.z);
+	vec4 vertexClip = o2v_projection * vec4(vertex.xy, z, 1.0);
+	vertexClip.z = vertexClip.w;
+	gl_Position = vertexClip;
+
+	// Brightness
+	// Usable scale is 0.01-10
+	float c = max (abs (vertex.z) - 1.0, 0.0);
+	c = exp (-c) / log (2.0);
+	c = star_brightness * pow (c, star_gamma);
+
+	gl_PointSize = clamp (c, 1.0, 3.0);
+
+	c = min (c, 1.0);
+
+	float v = exp(vertex.w / 2.0) / (1.0 + exp(vertex.w / 2.0));
+	float red = v;
+	float blue = 1.0 - v;
+	float green = (red + blue) / 2.0;
+	vec3 color = vec3(red, green, blue) / max(red, blue);
+	starColor = vec4(color.rgb, c);
+}

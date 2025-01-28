@@ -1,0 +1,12 @@
+#version 140
+
+in vec2 vertex;
+in vec2 texcoord;
+
+out vec2 interpolatedTexCoord;
+
+void main ()
+{
+	gl_Position = vec4(vertex, 0.0, 1.0);
+	interpolatedTexCoord = texcoord;
+}

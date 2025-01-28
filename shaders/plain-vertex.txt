@@ -1,0 +1,19 @@
+#version 140
+
+in vec3 vertex;
+in vec3 normal;
+
+uniform mat4 o2v_projection;
+uniform mat3 o2v_rotation;
+uniform vec3 o2v_position;
+
+out vec3 interpolatedVertexEye;
+out vec3 interpolatedNormalEye;
+
+void
+main ()
+{
+	gl_Position = o2v_projection * vec4(vertex, 1.0);
+	interpolatedVertexEye = o2v_rotation * vertex + o2v_position;
+	interpolatedNormalEye = o2v_rotation * normal;
+}

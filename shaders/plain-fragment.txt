@@ -1,0 +1,10 @@
+#version 140
+
+in vec4 interpolatedColor;
+
+out vec4 color_fragment;
+
+void main()
+{
+	color_fragment = interpolatedColor;
+}

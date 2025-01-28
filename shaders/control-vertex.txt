@@ -1,0 +1,53 @@
+#ifndef NUM_LIGHTS
+#define NUM_LIGHTS 0
+#endif
+
+#if NUM_LIGHTS
+#define HAS_LIGHTING 1
+#else
+#define HAS_LIGHTING 0
+#endif
+
+#ifndef HAS_COLORS
+#define HAS_COLORS 0
+#endif
+
+#ifndef HAS_TEXTURE
+#define HAS_TEXTURE 0
+#endif
+
+in vec3 vertex;
+
+uniform mat4 o2v_projection;
+
+#if HAS_LIGHTING
+in vec3 normal;
+uniform mat4x3 o2v;
+out vec3 interpolatedVertexEye;
+out vec3 interpolatedNormalEye;
+#endif
+
+#if HAS_TEXTURE
+in vec2 texcoord;
+out vec2 interpolatedTexCoord;
+#endif
+
+#if HAS_COLORS
+in vec4 color;
+out vec4 interpolatedColor;
+#endif
+
+void main()
+{
+	gl_Position = o2v_projection * vec4(vertex, 1.0);
+#if HAS_LIGHTING
+	interpolatedVertexEye = o2v * vec4(vertex, 1.0);
+	interpolatedNormalEye = o2v * vec4(normal, 0.0);
+#endif
+#if HAS_TEXTURE
+	interpolatedTexCoord = texcoord;
+#endif
+#if HAS_COLORS
+	interpolatedColor = color;
+#endif
+}

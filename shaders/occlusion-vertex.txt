@@ -1,0 +1,19 @@
+#ifndef MAX_INSTANCES
+#define MAX_INSTANCES 1
+#endif
+
+in vec3 vertex;
+
+uniform mat4x3 o2v[MAX_INSTANCES];
+uniform mat4 projection;
+
+uniform float radius;
+
+out vec3 center_eye;
+
+void main ()
+{
+	center_eye = o2v[gl_InstanceID][3];
+	vec3 vertex_eye = o2v[gl_InstanceID] * vec4(radius * vertex, 1.0);
+	gl_Position = projection * vec4(vertex_eye, 1.0);
+}

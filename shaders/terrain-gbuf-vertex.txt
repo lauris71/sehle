@@ -1,0 +1,22 @@
+uniform mat4 o2v_projection;
+uniform mat4x3 o2v;
+
+in vec3 vertex;
+in vec3 normal;
+in vec2 texcoord;
+in vec2 texcoord1;
+
+out vec3 interpolatedVertexEye;
+out vec3 interpolatedNormalEye;
+out vec2 interpolatedTexCoord[3];
+
+void main()
+{
+	gl_Position = o2v_projection * vec4(vertex, 1.0);
+	interpolatedVertexEye = o2v * vec4(vertex, 1.0);
+	interpolatedNormalEye = o2v * vec4(normal, 0.0);
+
+	interpolatedTexCoord[0] = texcoord1;
+	interpolatedTexCoord[1] = texcoord;
+	interpolatedTexCoord[2] = vertex.xy;
+}

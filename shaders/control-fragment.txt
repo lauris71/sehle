@@ -1,0 +1,90 @@
+#ifndef NUM_LIGHTS
+#define NUM_LIGHTS 0
+#endif
+
+#if NUM_LIGHTS
+#define HAS_LIGHTING 1
+#else
+#define HAS_LIGHTING 0
+#endif
+
+#ifndef HAS_COLORS
+#define HAS_COLORS 0
+#endif
+
+#ifndef HAS_TEXTURE
+#define HAS_TEXTURE 0
+#endif
+
+uniform vec4 diffuse;
+uniform float opacity;
+
+#if HAS_LIGHTING
+in vec3 interpolatedVertexEye;
+in vec3 interpolatedNormalEye;
+uniform vec4 ambient;
+uniform vec3 light_direction[NUM_LIGHTS];
+uniform vec4 light_color[NUM_LIGHTS];
+#endif
+
+#if HAS_TEXTURE
+uniform sampler2D colorSampler;
+in vec2 interpolatedTexCoord;
+#endif
+
+#if HAS_COLORS
+in vec4 interpolatedColor;
+#endif
+
+out vec4 color_fragment;
+
+void main()
+{
+	vec4 materialDiffuse = diffuse;
+#if HAS_COLORS
+	materialDiffuse *= interpolatedColor;
+#endif
+#if HAS_TEXTURE
+	materialDiffuse *= texture (colorSampler, interpolatedTexCoord);
+#endif
+
+#if HAS_LIGHTING
+	// Ambient
+	vec4 color = materialDiffuse * ambient;
+
+	// Specular
+	vec4 materialSpecular = vec4(1.0, 1.0, 1.0, 1.0);
+	float materialShininess = 8;
+
+	// Normal in eye space
+	vec3 normal = normalize (interpolatedNormalEye);
+
+	// Normalized parameters
+	vec3 eye2VertexNormalized = normalize(interpolatedVertexEye);
+
+	for (int i = 0; i < NUM_LIGHTS; i++) {
+		vec3 vertex2LightNormalized = light_direction[i];
+
+		// Diffuse color
+		float diffuseIntensity = max (dot (vertex2LightNormalized, normal), 0.0);
+		vec4 diffuseLightColor = diffuseIntensity * light_color[i];	
+		vec4 diffuseColor = diffuseLightColor * materialDiffuse;
+
+		// SpecularIntensity
+		float specularIntensity = clamp (dot (reflect (vertex2LightNormalized, normal), eye2VertexNormalized), 0.0, 1.0);
+		float specularShineIntensity = pow (specularIntensity, materialShininess);
+		vec4 specularLightColor = specularShineIntensity * light_color[i];
+		vec4 specularColor = specularLightColor * materialSpecular;
+	
+		// Final color
+		color = color + diffuseColor + specularColor;
+	}
+#else
+	vec4 color = materialDiffuse;
+#endif
+
+	// Set global opacity
+	color.a = materialDiffuse.a * opacity;
+
+	color_fragment = color;
+}

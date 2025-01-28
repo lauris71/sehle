@@ -1,0 +1,17 @@
+#version 140
+
+uniform sampler2D sourceSampler;
+uniform float lwmax, gamma;
+
+in vec2 interpolatedTexCoord;
+
+out vec4 color_fragment;
+
+vec3 exposure (vec3 color, float Lwmax);
+
+void main()
+{
+	vec4 color = texture (sourceSampler, interpolatedTexCoord);
+	color_fragment = vec4(pow (exposure (color.rgb, lwmax), vec3(gamma, gamma, gamma)), color.a);
+}
+

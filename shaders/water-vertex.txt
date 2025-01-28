@@ -1,0 +1,27 @@
+#ifndef DEPTH
+#define DEPTH 0
+#endif
+
+in vec3 vertex;
+
+uniform mat4x3 o2v;
+uniform mat4 o2v_projection;
+
+out vec3 interpolatedVertexObject;
+out vec3 interpolatedVertexEye;
+
+#if DEPTH
+in vec4 color;
+uniform float max_depth;
+out float interpolatedDepth;
+#endif
+
+void main()
+{
+	interpolatedVertexObject = vertex;
+	interpolatedVertexEye = o2v * vec4(vertex.xy, 0.0, 1.0);
+	gl_Position = o2v_projection * vec4(vertex.xy, 0.0, 1.0);
+#if DEPTH
+	interpolatedDepth = max (max_depth * color.r, -vertex.z);
+#endif
+}

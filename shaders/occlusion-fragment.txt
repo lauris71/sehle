@@ -1,0 +1,38 @@
+#ifndef MAX_INSTANCES
+#define MAX_INSTANCES 1
+#endif
+
+// GBuffer parameters
+uniform vec4 viewportinv;
+uniform mat4 map_rprojection;
+uniform sampler2D depthSampler;
+
+uniform float radius;
+uniform float inner_radius;
+uniform float strength;
+
+in vec3 center_eye;
+
+out vec4 albedo_fragment;
+
+void decodeGBuffer (in vec4 albedoData, in vec4 normalData, in vec4 specualrData, out vec3 albedo, out vec3 normal, out vec3 specular, out float ambient, out float shininess);
+
+vec4 get_vertex_eye () {
+	// Normalized screen / texture lookup coordinates
+	vec2 tlc = gl_FragCoord.xy * viewportinv.xy + viewportinv.zw;
+	float Zw =  texture(depthSampler, tlc).x;
+	// Denormalized eye coordinates
+	vec4 vertexEyeDN = map_rprojection * vec4(tlc, Zw, 1.0);
+	return vertexEyeDN / vertexEyeDN.w;
+}
+
+void main()
+{
+	vec4 vertex_eye = get_vertex_eye ();
+	vec3 vertex_rel = vertex_eye.xyz - center_eye;
+	float dist = length(vertex_rel);
+	if (dist >= radius) discard;
+	dist = dist / radius;
+	float term = clamp ((dist - inner_radius) / (1.0 - inner_radius), 0.0, 1.0);
+	albedo_fragment = vec4(0.0, 0.0, 0.0, 1.0 - strength * (1.0 - term));
+}

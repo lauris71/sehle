@@ -1,0 +1,62 @@
+#ifndef HAS_TEXTURE
+#define HAS_TEXTURE 0
+#endif
+#ifndef HAS_COLORS
+#define HAS_COLORS 0
+#endif
+#ifndef HAS_DIFFUSE
+#define HAS_DIFFUSE 0
+#endif
+#ifndef HAS_OPACITY
+#define HAS_OPACITY 0
+#endif
+
+uniform vec4 clip_plane;
+
+in vec3 interpolatedVertexEye;
+
+#if HAS_TEXTURE
+uniform sampler2D color_sampler;
+in vec2 interpolatedTexCoord;
+#endif
+
+#if HAS_COLORS
+in vec4 interpolatedColor;
+#endif
+
+#if HAS_DIFFUSE
+uniform vec4 diffuse;
+#endif
+
+#if HAS_OPACITY
+uniform float opacity;
+#endif
+
+out vec4 color_fragment;
+
+void main()
+{
+	float clipPos = dot (interpolatedVertexEye, clip_plane.xyz) + clip_plane.w;
+	if (clipPos < 0.0) {
+		discard;
+	}
+#if HAS_TEXTURE
+	vec4 color = texture (color_sampler, interpolatedTexCoord);
+#else
+	vec4 color = vec4(1.0, 1.0, 1.0, 1.0);
+#endif
+#if HAS_COLORS
+	color *= interpolatedColor;
+#endif
+#if HAS_DIFFUSE
+	color *= diffuse;
+#endif
+#if HAS_OPACITY
+	color.a *= opacity;
+#endif
+	if (color.a < 0.125) {
+		discard;
+	}
+
+	color_fragment = color;
+}

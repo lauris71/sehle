@@ -1,0 +1,61 @@
+#ifndef MAX_INSTANCES
+#define MAX_INSTANCES 1
+#endif
+
+#ifndef HAS_NORMAL
+#define HAS_NORMAL 1
+#endif
+
+#ifndef HAS_AMBIENT_OCCLUSION
+#define HAS_AMBIENT_OCCLUSION 0
+#endif
+
+#ifndef HAS_WIND
+#define HAS_WIND 0
+#endif
+
+in vec3 vertex;
+in vec2 texcoord;
+
+uniform mat4x3 o2v[MAX_INSTANCES];
+uniform mat4 projection;
+
+out vec2 interpolatedTexCoord;
+
+#if HAS_NORMAL
+in vec3 normal;
+uniform float normal_factor;
+uniform vec3 view_normal;
+out vec3 interpolatedNormalEye;
+#endif
+
+#if HAS_AMBIENT_OCCLUSION
+out vec3 interpolatedAODistance;
+#endif
+
+#if HAS_WIND
+uniform float time;
+uniform sampler2D windSampler;
+#endif
+
+void main ()
+{
+#if HAS_WIND
+	float s_theta = sin (time);
+	float c_theta = cos (time);
+	float s_phi = 1.0;
+	float c_phi = sqrt (max (vertex.z, 0.0));
+	vec3 delta = vertex * vec3(s_theta * c_phi, c_theta * c_phi, s_phi);
+	vec3 vertex_view = o2v[gl_InstanceID] * vec4(vertex + 0.01 * delta, 1.0);
+#else
+	vec3 vertex_view = o2v[gl_InstanceID] * vec4(vertex, 1.0);
+#endif
+	gl_Position = projection * vec4(vertex_view, 1.0);
+#if HAS_NORMAL
+	interpolatedNormalEye = normal_factor * (o2v[gl_InstanceID] * vec4(normal, 0.0)) + (1.0 - normal_factor) * view_normal;
+#endif
+#if HAS_AMBIENT_OCCLUSION
+	interpolatedAODistance = vertex;
+#endif
+	interpolatedTexCoord = texcoord;
+}

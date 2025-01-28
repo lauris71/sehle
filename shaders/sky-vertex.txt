@@ -1,0 +1,85 @@
+in vec3 vertex;
+
+uniform mat4 o2v_projection;
+uniform vec3 sun_direction;
+uniform vec3 k_r, k_m;
+uniform vec3 sun_radiosity;
+
+out vec3 interpolatedVertex;
+out vec3 interpolatedColor;
+out vec3 interpolatedOutscattering;
+
+float PI = 3.14159265;
+float E =  2.718281828;
+
+//
+// Calculate the distance along ray until the end of atmosphere
+//
+
+float
+rayLengthAtmosphere (vec3 P, vec3 d)
+{
+	// d2 * t2 + 2 * (P - C) * d * t + (P - C)2 - R2 = 0;
+	// lengthVertical = 8km
+	// lengthHorizontal = 309.941km
+	float r = 6000000.0;
+	float R = 6008000.0;
+	vec3 C = vec3(0.0, 0.0, -r);
+	float b = 2.0 * dot (P - C, d);
+	float c = dot (P - C, P - C) - R * R;
+	return (-b + sqrt (b * b - 4.0 * c)) / 2.0;
+}
+
+//
+// Out-scattering at given length
+//
+
+vec3
+t (float l, vec3 K)
+{
+	float f = 4.0 * PI / E;
+	return f * K * l;
+}
+
+vec3
+skyLuminosity (vec3 viewDir, vec3 sunDir, vec3 K, vec3 Is)
+{
+	vec3 isLight = vec3(0.0, 0.0, 0.0);
+
+	// Test
+	vec3 vd = viewDir;
+	if (vd.z < 0) vd.z = 0;
+	float lenAB = rayLengthAtmosphere (vec3(0.0, 0.0, 0.0), vd);
+
+	// fixme:
+	interpolatedOutscattering = exp (-t (lenAB, K));
+
+	float dl = lenAB / 8.0;
+	for (int i = 0; i < 8; i++) {
+		float s = (float(i) + 0.5) / 8.0;
+		float lenAP = s * lenAB;
+		vec3 P = lenAP * viewDir;
+		float lenPC = rayLengthAtmosphere (P, sunDir);
+		// Light arriving at P
+		vec3 lightP = exp (-t (lenPC, K));
+		// Light scattered towards A
+		vec3 lightPscatter = lightP;
+		// Light arriving at A
+		vec3 Iv = lightPscatter * exp (-t (lenAP, K));
+		isLight += Iv;
+	}
+	return isLight * Is * dl;
+}
+
+void main()
+{
+	vec4 vertexClip = o2v_projection * vec4(vertex, 0.0);
+	vertexClip.z = vertexClip.w;
+	gl_Position = vertexClip;
+	interpolatedVertex = vertex;
+
+	vec3 viewDir = normalize (vertex);
+
+	// We do final attenuation in pixel shader
+	interpolatedColor = skyLuminosity (viewDir, sun_direction, k_r + k_m, sun_radiosity);
+}

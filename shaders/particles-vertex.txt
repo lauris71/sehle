@@ -1,0 +1,21 @@
+in vec3 vertex;
+in vec2 texcoord;
+in vec4 properties;
+
+uniform mat4 projection;
+uniform mat4x3 o2v;
+
+out vec2 interpolatedTexCoord;
+out vec3 interpolatedVertexEye;
+out float interpolatedAge;
+
+void main()
+{
+	vec3 vertexEye = o2v * vec4(vertex, 1.0);
+	vertexEye += vec3(properties[0] * (texcoord - vec2(0.5, 0.5)), 0.0);
+	gl_Position = projection * vec4(vertexEye, 1.0);
+
+	interpolatedTexCoord = texcoord;
+	interpolatedVertexEye = vertexEye;
+	interpolatedAge = properties[1];
+}

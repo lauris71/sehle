@@ -1,0 +1,63 @@
+#ifndef MAX_INSTANCES
+#define MAX_INSTANCES 1
+#endif
+#ifndef HAS_TEXTURE
+#define HAS_TEXTURE 0
+#endif
+#ifndef HAS_COLORS
+#define HAS_COLORS 0
+#endif
+#ifndef HAS_SKIN
+#define HAS_SKIN 0
+#endif
+
+in vec3 vertex;
+
+uniform mat4 projection;
+uniform mat4x3 o2v[MAX_INSTANCES];
+
+out vec3 interpolatedVertexEye;
+
+#if HAS_TEXTURE
+in vec2 texcoord;
+out vec2 interpolatedTexCoord;
+#endif
+
+#if HAS_COLORS
+in vec4 color;
+out vec4 interpolatedColor;
+#endif
+
+#if HAS_SKIN
+in vec4 bones;
+in vec4 weights;
+uniform mat4x3[32] as2s;
+void apply_skin (vec3 vertex, vec4 bones, vec4 weights, out vec3 anim_vertex)
+{
+	anim_vertex =
+	weights[0] * as2s[int(bones[0])] * vec4(vertex, 1.0) +
+	weights[1] * as2s[int(bones[1])] * vec4(vertex, 1.0) +
+	weights[2] * as2s[int(bones[2])] * vec4(vertex, 1.0) +
+	weights[3] * as2s[int(bones[3])] * vec4(vertex, 1.0);
+}
+#endif
+
+void main()
+{
+#if HAS_SKIN
+	vec3 skin_vert;
+	apply_skin (vertex, bones, weights, skin_vert);
+	vec4 anim_vert = vec4(skin_vert, 1.0);
+#else
+	vec4 anim_vert = vec4(vertex, 1.0);
+#endif
+	vec3 vertex_view = o2v[gl_InstanceID] * anim_vert;
+	gl_Position = projection * vec4(vertex_view, 1.0);
+	interpolatedVertexEye = vertex_view;
+#if HAS_TEXTURE
+	interpolatedTexCoord = texcoord;
+#endif
+#if HAS_COLORS
+	interpolatedColor = color;
+#endif
+}

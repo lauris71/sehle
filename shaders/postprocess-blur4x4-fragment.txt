@@ -1,0 +1,37 @@
+#version 140
+
+uniform vec4 viewport_inv;
+uniform vec2 texel_size;
+uniform sampler2D sourceSampler;
+
+in vec2 interpolatedTexCoord;
+
+void main()
+{
+	// Normalized screen / texture lookup coordinates
+	vec2 tlc = gl_FragCoord.xy * viewport_inv.xy + viewport_inv.zw;
+
+	vec4 sum = vec4(0.0, 0.0, 0.0, 0.0);
+#if 1
+	tlc += 0.5 * viewport_inv.xy;
+	float dx = texel_size.x;
+	float dy = texel_size.y;
+	const float alpha0 = 0.5;
+	float fx = (1.0 - 1.5 - alpha0) * dx;
+	float fy = (1.0 - 1.5 - alpha0) * dy;
+	sum += texture (sourceSampler, tlc + vec2(fx, fy));
+	sum += texture (sourceSampler, tlc + vec2(fx, -fy));
+	sum += texture (sourceSampler, tlc + vec2(-fx, -fy));
+	sum += texture (sourceSampler, tlc + vec2(-fx, fy));
+#else
+	for (int y = 0; y < 4; y++) {
+		for (int x = 0; x < 4; x++) {
+			vec2 offset = vec2(texel_size.x * (float (x) - 1.0), texel_size.y * (float (y) - 1.0));
+			sum += texture (sourceSampler, tlc + offset);
+		}
+	}
+	gl_FragData[0] = sum / 16.0;
+#endif
+	gl_FragData[0] = sum / 4.0;
+}
+

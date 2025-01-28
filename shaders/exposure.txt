@@ -1,0 +1,21 @@
+#version 140
+
+vec3
+exposure (vec3 color, float Lwmax)
+{
+	// fixme: this has to go to final pass
+	// Exposure calculation
+	float Lw = 0.299 * color.r + 0.587 * color.g + 0.114 * color.b;
+
+	// Stockham
+	// float Lwmax = 1.25;
+	float Ld = log (1.0 + Lw) / log (1.0 + Lwmax);
+
+	// Drago
+	// float Ldmax = 1.0;
+	// float Lwmax = 0.5;
+	// float b = 0.8;
+	// float Ld = (Ldmax * log (Lw + 1.0)) / (log (Lwmax + 1.0) * log (2.0 + pow (Lw / Lwmax, log (b) / log (0.5)) * 8.0));
+	
+	return color.rgb * (Ld / Lw);
+}

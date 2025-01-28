@@ -1,0 +1,33 @@
+#version 140
+
+uniform vec4 w2g;
+uniform mat4 g2e_rprojection;
+uniform sampler2D depthSampler, normalSampler, albedoSampler, specularSampler;
+uniform vec4 planes[8];
+uniform vec3 ambient;
+
+void decodeGBuffer (in vec4 albedoData, in vec4 normalData, in vec4 specualrData, out vec3 albedo, out vec3 normal, out vec3 specular, out float shininess);
+
+void main()
+{
+	// Normalized screen / texture lookup coordinates
+	vec2 tlc = gl_FragCoord.xy * w2g.xy + w2g.zw;
+	float Zw =  texture(depthSampler, tlc).x;
+	// Denormalized eye coordinates
+	vec4 vertexEyeDN = g2e_rprojection * vec4(tlc, Zw, 1.0);
+	vec4 vertexEye = vertexEyeDN / vertexEyeDN.w;
+
+	vec4 albedoData = texture(albedoSampler, tlc);
+
+	float factor = 1.0;
+	for (int i = 0; i < 8; i++) {
+		float d = dot (vertexEye.xyz, planes[i].xyz) + planes[i].w;
+		d = 1.0 - clamp (d, 0.0, 1.0);
+		factor *= d;
+	}
+	vec3 ambientColor = ambient * albedoData.rgb;
+
+	gl_FragData[0] = vec4(factor * ambientColor, 1.0);
+	// gl_FragData[0] = vec4(1.0, 0.0, 0.0, 1.0);
+}
+

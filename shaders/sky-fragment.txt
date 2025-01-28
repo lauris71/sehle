@@ -1,0 +1,81 @@
+uniform vec4 vp2t;
+uniform mat4 map_rprojection;
+uniform sampler2D depthSampler;
+
+uniform vec3 sun_direction;
+uniform vec3 k_r, k_m;
+uniform float g_m, g_m2;
+uniform samplerCube sky_sampler;
+uniform float sky_brightness;
+uniform mat3 w2s;
+uniform float c_a, c_b;
+
+in vec3 interpolatedVertex;
+in vec3 interpolatedColor;
+in vec3 interpolatedOutscattering;
+
+out vec4 color_fragment;
+
+//
+// Phase functions - i.e. the relative scattering intensity in given direction
+//
+
+float
+Fr (float cosTheta)
+{
+	return 0.75 * (1.0 + cosTheta * cosTheta);
+}
+
+float
+Fm (float cosTheta)
+{
+	float a = 3.0 * (1.0 - g_m2);
+	float b = 2.0 * (2.0 + g_m2);
+	float c = 1.0 + cosTheta * cosTheta;
+	float d = 1.0 + g_m2 - 2.0 * g_m * cosTheta;
+	d = sqrt (d * d * d);
+	return a * c / (b * d);
+}
+
+void main()
+{
+	// Normalized screen / texture lookup coordinates
+	vec2 tlc = gl_FragCoord.xy * vp2t.xy + vp2t.zw;
+	float Zw =  texture(depthSampler, tlc).x;
+	// Denormalized eye coordinates
+	vec4 vertexEyeDN = map_rprojection * vec4(tlc, Zw, 1.0);
+	vec4 vertexEye = vertexEyeDN / vertexEyeDN.w;
+
+	// Test
+	// Alpha for aerial perspective
+	float alpha = 1.0;
+	if (Zw < 1.0) {
+		float aerialfactor = clamp (10.0 * sun_direction.z, 0.0, 1.0);
+		alpha = min (-vertexEye.z / 4900.0, 1.0);
+		alpha = alpha * aerialfactor;
+	}
+
+	vec3 viewDir = normalize (interpolatedVertex);
+
+	vec3 starDir = w2s * viewDir;
+	vec3 starColor = texture (sky_sampler, starDir).rgb * sky_brightness;
+	starColor = starColor * interpolatedOutscattering;
+
+	float cosTheta = dot (-viewDir, sun_direction);
+	//vec3 color = skyColor.rgb;
+
+	vec3 color = interpolatedColor * (k_r * Fr (cosTheta) + k_m * Fm (cosTheta));
+
+	// vec3 Ic = vec3(0.299, 0.587, 0.114);
+	vec3 Ic = vec3(0.333, 0.333, 0.333);
+	float Lw = dot (color, Ic);
+
+	// Intensity mapping function
+	// F(x) = ax / (1.0 + bx)
+	float R = c_a * Lw / (1.0 + c_b * Lw);
+
+	color = color * R / (Lw + 0.001) + starColor;
+
+	color_fragment = vec4(color, alpha);
+	//color_fragment = vec4(starColor, alpha);
+}
