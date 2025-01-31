@@ -70,6 +70,9 @@ extern unsigned int sehle_material_control_type;
 extern SehleMaterialControlClass *sehle_material_control_class;
 #endif
 
+void sehle_material_control_init(SehleMaterialControl *mctrl, SehleEngine *engine);
+void sehle_material_control_finalize(SehleMaterialControl *mctrl);
+
 SehleMaterialControl *sehle_material_control_new (SehleEngine *engine);
 void sehle_material_control_delete (SehleMaterialControl *flg);
 

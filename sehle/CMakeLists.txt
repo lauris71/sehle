@@ -1,3 +1,27 @@
+SET(SMAA_SOURCES smaa-dict.c smaa-dict.h)
+set(GLEW_SOURCES ${PROJECT_SOURCE_DIR}/GL/glew.c)
+
+if(NOT WITH_NR)
+	set(NR_SOURCES ${PROJECT_SOURCE_DIR}/nr/pixblock.c)
+endif()
+
+SET(SHADER_SOURCES
+	${PROJECT_SOURCE_DIR}/sehle/shaders/shaders-dict.c
+	${PROJECT_SOURCE_DIR}/sehle/shaders/shaders-dict.h
+	${PROJECT_SOURCE_DIR}/sehle/shaders/shaders-code.c
+	${PROJECT_SOURCE_DIR}/sehle/shaders/shaders-code.h
+)
+
+find_program(RC666 NAMES rc666
+    PATHS
+        ${CMAKE_SOURCE_DIR}/build/rc666
+        ${CMAKE_SOURCE_DIR}/rc666/build
+)
+
+if(RC666)
+	add_subdirectory(shaders)
+endif()
+
 ADD_LIBRARY(sehle STATIC
 	sehle.h
 
@@ -61,3 +85,19 @@ target_include_directories(sehle PUBLIC
 	${CMAKE_SOURCE_DIR}/sehle
 	${PROJECT_SOURCE_DIR}
 )
+
+set(SHADER_DICT_C ${PROJECT_SOURCE_DIR}/sehle/shaders-dict.c)
+set(SHADER_DICT_H ${PROJECT_SOURCE_DIR}/sehle/shaders-dict.h)
+
+#if(RC666)
+#message("Shader dict c: ${SHADER_DICT_C}")
+#message("Shader dict h: ${SHADER_DICT_H}")
+#add_custom_command(
+#   OUTPUT ${SHADER_DICT_C} ${SHADER_DICT_H}
+#   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/shaders
+#   #COMMAND  rc666 -dictionary shaders-dict -skipdictheader -dictlookupmethod getMap -data shaders-code -files shaders.txt
+#   COMMAND  ${RC666} -dictionary shaders-dict -dictlookupmethod getMap -data shaders-code -dir ${PROJECT_SOURCE_DIR}/shaders depth-vertex.txt depth-fragment.txt
+#   DEPENDS ${SHADER_SOURCES}
+#)
+#endif()
+
