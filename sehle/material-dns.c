@@ -42,7 +42,7 @@ dns_get_shader (SehleEngine *engine, unsigned int shader_type, unsigned int flag
 		output);
 	SehleShader *shader = sehle_engine_get_shader (engine, c, shader_type);
 	if (!sehle_resource_is_initialized (&shader->resource)) {
-		static const char *outputs[] = { "GBUFFER", "BLEND", "DENSITY" };
+		static const char *outputs[] = { "GBUFFER", "FORWARD", "DENSITY" };
 		const char *sources[1];
 		sprintf (c, "#version 140\n"
 			"#define %s\n"
@@ -61,7 +61,7 @@ dns_get_shader (SehleEngine *engine, unsigned int shader_type, unsigned int flag
 			(flags & SEHLE_PROGRAM_DNS_HAS_AMBIENT) != 0,
 			(flags & SEHLE_PROGRAM_DNS_HAS_BONES) != 0,
 			outputs[output]);
-		sources[0] = (shader_type == SEHLE_SHADER_VERTEX) ? "dns-vertex.txt" : "dns-fragment.txt";
+		sources[0] = (shader_type == SEHLE_SHADER_VERTEX) ? "dns-vertex.txt" : "dns-fragment.glsl";
 		sehle_shader_build_from_header_files (shader, (const unsigned char *) c, -1, (const unsigned char **) sources, 1);
 	}
 	return shader;
@@ -70,8 +70,9 @@ dns_get_shader (SehleEngine *engine, unsigned int shader_type, unsigned int flag
 static const char *uniforms[] = {
 	"colorSampler", "normalSampler", "specularSampler", "ambientSampler",
 	"diffuse", "specular", "shininess", "ambient",
+	"global_ambient",
 	"light_ambient", "light_diffuse", "light_direct",
-	"light_pos", "light_dir", "point_attenuation", "spot_attenuation",
+	"light_pos", "light_dir", "point_attn", "spot_attn",
 	"as2s"
 };
 
@@ -147,8 +148,8 @@ static void
 material_dns_init (SehleMaterialDNSClass *klass, SehleMaterialDNS *dns)
 {
 	sehle_material_setup (&dns->material_inst, DNS_NUM_PROGRAMS, SEHLE_MATERIAL_DNS_NUM_MAPS);
-	dns->material_inst.render_stages = SEHLE_STAGE_SOLID | SEHLE_STAGE_TRANSPARENT;
-	dns->material_inst.render_types = SEHLE_RENDER_DEPTH | SEHLE_RENDER_DENSITY | SEHLE_RENDER_TRANSPARENT | SEHLE_RENDER_GBUFFER;
+	dns->material_inst.render_stages = SEHLE_STAGE_SOLID | SEHLE_STAGE_FORWARD | SEHLE_STAGE_TRANSPARENT;
+	dns->material_inst.render_types = SEHLE_RENDER_DEPTH | SEHLE_RENDER_DENSITY | SEHLE_RENDER_FORWARD | SEHLE_RENDER_TRANSPARENT | SEHLE_RENDER_GBUFFER;
 	dns->diffuse = EleaColor4fWhite;
 	dns->specular = EleaColor4fTransparent;
 	dns->shininess = 1;
@@ -172,6 +173,8 @@ material_dns_bind (SehleMaterialImplementation *impl, SehleMaterialInstance *ins
 		pidx = DNS_PROGRAM_DEPTH;
 	} else if (render_type == SEHLE_RENDER_DENSITY) {
 		pidx = DNS_PROGRAM_DENSITY;
+	} else if (render_type == SEHLE_RENDER_FORWARD) {
+		pidx = DNS_PROGRAM_TRANSPARENCY;
 	} else if (render_type == SEHLE_RENDER_TRANSPARENT) {
 		pidx = DNS_PROGRAM_TRANSPARENCY;
 	} else if (render_type == SEHLE_RENDER_GBUFFER) {
@@ -194,7 +197,7 @@ material_dns_bind (SehleMaterialImplementation *impl, SehleMaterialInstance *ins
 		sehle_material_instance_bind_texture (inst, ctx, pidx, SEHLE_MATERIAL_DNS_MAP_DIFFUSE, SEHLE_PROGRAM_DNS_COLOR_SAMPLER);
 	}
 
-	if (render_type == SEHLE_RENDER_TRANSPARENT) {
+	if ((render_type == SEHLE_RENDER_FORWARD) | (render_type == SEHLE_RENDER_TRANSPARENT)) {
 		if (dns->program_flags & SEHLE_PROGRAM_DNS_HAS_NORMAL) {
 			sehle_material_instance_bind_texture (inst, ctx, pidx, SEHLE_MATERIAL_DNS_MAP_NORMAL, SEHLE_PROGRAM_DNS_NORMAL_SAMPLER);
 		}
@@ -210,6 +213,7 @@ material_dns_bind (SehleMaterialImplementation *impl, SehleMaterialInstance *ins
 			sehle_program_setUniform1f (prog, SEHLE_PROGRAM_DNS_AMBIENT, 1.0f);
 		}
 		/* Light colors */
+		sehle_program_setUniform3fv (prog, SEHLE_PROGRAM_DN_GLOBAL_AMBIENT, 1, ctx->global_ambient.c);
 		EleaVec3f light_colors[4];
 		memset (light_colors, 0, sizeof light_colors);
 		for (unsigned int i = 0; i < ctx->numlights; i++) {
@@ -228,16 +232,19 @@ material_dns_bind (SehleMaterialImplementation *impl, SehleMaterialInstance *ins
 		EleaVec4f light_pos[4];
 		memset (light_pos, 0, sizeof (light_pos));
 		for (unsigned int i = 0; i < ctx->numlights; i++) {
-			EleaVec3f t;
-			elea_mat3x4f_get_translation (&t, &ctx->lights[i]->l2w);
-			elea_mat3x4f_transform_point ((EleaVec3f *) &light_pos[i], &ctx->w2v, &t);
-			light_pos[i].w = 0;
+			light_pos[i] = ctx->lights[i]->info.pos;
+			//EleaVec3f t;
+			//elea_mat3x4f_get_translation (&t, &ctx->lights[i]->l2w);
+			//elea_mat3x4f_transform_point ((EleaVec3f *) &light_pos[i], &ctx->w2v, &t);
+			//light_pos[i].w = 0;
 		}
 		sehle_program_setUniform4fv (prog, SEHLE_PROGRAM_DNS_LIGHT_POS, 4, light_pos[0].c);
 		EleaVec3f light_dir[4];
 		memset (light_dir, 0, sizeof light_dir);
 		for (unsigned int i = 0; i < ctx->numlights; i++) {
-			elea_mat3x4f_get_col_vec (&light_dir[i], &ctx->lights[i]->l2w, 2);
+			EleaVec3f t;
+			elea_mat3x4f_get_col_vec (&t, &ctx->lights[i]->l2w, 2);
+			elea_mat3x4f_transform_vec3(&light_dir[i], &ctx->w2v, &t);
 			light_dir[i] = elea_vec3f_inv (light_dir[i]);
 		}
 		sehle_program_setUniform3fv (prog, SEHLE_PROGRAM_DNS_LIGHT_DIR, 4, light_dir[0].c);
@@ -355,8 +362,8 @@ sehle_material_dns_set_transparent (SehleMaterialDNS *mdns, unsigned int transpa
 		mdns->material_inst.render_types = SEHLE_RENDER_DENSITY | SEHLE_RENDER_TRANSPARENT;
 	} else {
 		sehle_render_flags_clear (&mdns->material_inst.state_flags, SEHLE_BLEND);
-		mdns->material_inst.render_stages = SEHLE_STAGE_SOLID;
-		mdns->material_inst.render_types = SEHLE_RENDER_DEPTH | SEHLE_RENDER_GBUFFER;
+		mdns->material_inst.render_stages = SEHLE_STAGE_SOLID | SEHLE_STAGE_FORWARD;
+		mdns->material_inst.render_types = SEHLE_RENDER_DEPTH | SEHLE_RENDER_FORWARD | SEHLE_RENDER_GBUFFER;
 	}
 	if (sort) {
 		mdns->material_inst.properties |= SEHLE_MATERIAL_SORT;

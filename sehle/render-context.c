@@ -606,6 +606,7 @@ sehle_render_context_finish_frame (SehleRenderContext *ctx)
 	}
 	ctx->nreflections = 0;
 	ctx->n_refl_frags = 0;
+	ctx->numlights = 0;
 }
 
 void

@@ -42,6 +42,11 @@ struct _SehleDirectionalLightClass {
 
 unsigned int sehle_directional_light_get_type (void);
 
+#ifndef __SEHLE_DIRECTIONAL_LIGHT_C__
+extern unsigned int sehle_directional_light_type;
+extern SehleDirectionalLightClass *sehle_directional_light_class;
+#endif
+
 void sehle_directional_light_setup (SehleDirectionalLightInstance *dlight, SehleEngine *engine, float priority, unsigned int num_splits);
 
 void sehle_directional_light_set_shadow_matrices (SehleDirectionalLightInstance *dlight, EleaMat3x4f *v2w, EleaMat3x4f *l2w, EleaMat4x4f shadow_projections[], float splits[]);

@@ -45,6 +45,8 @@ void sehle_spot_light_set_spot_attenuation (SehleSpotLightInstance *inst, float 
 
 void sehle_spot_light_update_geometry (SehleSpotLightInstance *inst);
 
+void sehle_spot_light_update_visuals(SehleSpotLightInstance *spot);
+
 #ifdef __cplusplus
 };
 #endif

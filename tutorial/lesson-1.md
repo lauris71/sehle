@@ -212,35 +212,34 @@ We also attach created vertex array to static mesh and specify it's bounding box
     sehle_static_mesh_setup(&mesh, engine, 1);
     /* Set up static mesh geometry and bounding box */
     sehle_static_mesh_set_vertex_array(&mesh, va);
-    elea_aabox3f_set_values(&mesh.renderable_inst.bbox, -1, -1, -1, 1, 1, 1);
+    elea_aabox3f_set_values(&mesh.renderable_inst.bbox, -2, -2, -2, 2, 2, 2);
 
+RenderContext requires material, so we have to set up one. We use the most simple forward-rendered SehleMaterialControl.
+It is intended for gizmos, controls and similar things but for our tutorial it is enough.
+SehleMaterial is actually interface type, but SehleMaterialControl implements it so we do not have to set up the
+implementation ourselves.
 
-    /*
-     * Create materials
-     * We use simple forward-rendered material
-     */
     SehleMaterialControl mat;
     sehle_material_control_init(&mat, engine);
     sehle_material_control_set_has_colors(&mat, 1);
     mat.ambient = EleaColor4fWhite;
     mat.color = EleaColor4fWhite;
 
-    /* Add material slot to static mesh and set material */
+Now we add created material to static mesh material slot 0.
+
     sehle_static_mesh_resize_materials(&mesh, 1);
     sehle_static_mesh_set_material(&mesh, 0, SEHLE_MATERIAL_CONTROL_MATERIAL_IMPLEMENTATION, &mat.material_inst);
-    /*
-     * Set up static mesh fragment
-     * Fragments are simply parts of mesh with different slice of index buffer and material
-     * LOD is automatically set up to draw everything by default
-     */
+
+Single static mesh can have multile fragments with multiple materials, LOD levels and so on. We just create single fragment,
+assign all indices to it and set it's material index to 0.
+
     sehle_static_mesh_resize_fragments(&mesh, 1);
     mesh.frags[0].first = 0;
     mesh.frags[0].n_indices = va->ibuf->buffer.n_elements;
     mesh.frags[0].mat_idx = 0;
 
-    /*
-     * Set up view and projection matrices
-     */
+Now set up view matrices in SehleRenderContexxt.
+
     EleaVec3f viewpoint = {2, 4, 3};
     EleaMat3x4f v2w;
     elea_mat3x4f_set_look_at(&v2w, &viewpoint, &EleaVec3f0, &EleaVec3fZ);
@@ -249,10 +248,7 @@ We also attach created vertex array to static mesh and specify it's bounding box
     /* Update view parameters in render context  */
     sehle_render_context_set_view (&ctx, &v2w, &proj);
 
-    /*
-     * Bind render context - i.e. ensure that the engine state matches that of context
-     */
-    sehle_render_context_bind(&ctx);
+Now start the main rendering loop
 
     double start = arikkei_get_time();
     double time;
@@ -284,14 +280,13 @@ We also attach created vertex array to static mesh and specify it's bounding box
                         width = evt.window.data1;
                         height = evt.window.data2;
                         SDL_SetWindowSize(window, width, height);
-                        /*
-                         * Resize render target
-                         * This is only needed for proper framebuffers (not window taget) but we keep it here
-                         */
+
+Resize the render target to match window. This is only needed for proper framebuffers (not window taget) but we keep it here
+
                         sehle_render_target_resize(tgt, width, height);
-                        /*
-                         * Resize render context
-                         */
+
+Resize render context (needed to keep the engine state up to date)
+
                         sehle_render_context_set_viewport(&ctx, 0, 0, width, height);
                         break;
                 }
@@ -301,28 +296,52 @@ We also attach created vertex array to static mesh and specify it's bounding box
                 break;
             default:
                 time = arikkei_get_time() - start;
+
+Rotate the static mesh. Normally whenever the local coordinate system changes, bbox should be updated, but we
+set the original bbox large enough to contain the rotated version.
+
                 elea_mat3x4f_set_rotation_axis_angle(&mesh.r2w, &EleaVec3fZ, fmod(time, 2 * M_PI));
                 break;
         }
-        /* Re-bind context to ensure the synchronization with engine */
+
+Now come the actual rendering calls.
+
+Render context should be bound before rendering - i.e. update OpenGL render state to match the one of RenderContext.
+
         sehle_render_context_bind(&ctx);
-        /* Clear frame */
-        sehle_render_context_clear (&ctx, 1, 1, &EleaColor4fBlue);
-        /* Display renderable */
+
+Clear frame to uniform color.
+
+        EleaColor4f bg = {0.32f, 0.3f, 0.27f};
+        sehle_render_context_clear (&ctx, 1, 1, &bg);
+
+Display all our renderables. This calls *display* virtual method of renderables, submitting geometry for subsequent render calls.
+
+Display uses the concept of render stages. A stage one semantic part of multi-pass rendering (e.g. STAGE_SOLID, STAGE_TRANSPARENT,
+STAGE_LIGHTING). Here we use forward stage.
+
         sehle_render_context_display_frame(&ctx, SEHLE_STATIC_MESH_RENDERABLE_IMPLEMENTATION, &mesh.renderable_inst, 1, SEHLE_STAGE_FORWARD | SEHLE_STAGE_SOLID);
-        /* Render everything that was submitted at display stage  */
+
+Render everything that was submitted in display pass. This calls the *render* virtual method of renderables, sending submitted
+data to OpenGL engine.
+
+Render uses both display stage and render type. Render type defines, which parts and properties of renderale are relevant and how they should be handles (e.g. RENDER_DEPTH, RENDER_DENSITY, RENDER_AMBIENT). Here we use RENDER_FORWARD type.
+
         sehle_render_context_render (&ctx, SEHLE_STAGE_FORWARD, SEHLE_RENDER_FORWARD, 1, 0);
-        /* Clean up context */
+
+Clean up RenderContext (free list etc.).
+
         sehle_render_context_finish_frame(&ctx);
         
         SDL_GL_SwapWindow(window);
     }
 
+When we finish it is good idea to delete engine.
+
     sehle_engine_delete(engine);
+
+And shut down SDL
 
     SDL_DestroyWindow(window);
     SDL_GL_DeleteContext(gl_context);
     SDL_Quit();
-
-    return 0;
-}

@@ -31,9 +31,9 @@ extern const char depth_vertex_txt_0_data[];
 extern unsigned int depth_vertex_txt_0_size;
 extern uint64_t depth_vertex_txt_size;
 
-extern const char dns_fragment_txt_0_data[];
-extern unsigned int dns_fragment_txt_0_size;
-extern uint64_t dns_fragment_txt_size;
+extern const char dns_fragment_glsl_0_data[];
+extern unsigned int dns_fragment_glsl_0_size;
+extern uint64_t dns_fragment_glsl_size;
 
 extern const char dns_vertex_txt_0_data[];
 extern unsigned int dns_vertex_txt_0_size;

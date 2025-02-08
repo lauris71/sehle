@@ -55,8 +55,9 @@ uniform float ambient;
 mat3 findTangentSpace (vec3 vEye, vec3 nEyeNormalized, vec2 tCoord);
 #endif
 
-#ifdef BLEND
+#ifdef FORWARD
 #define NUM_LIGHTS 4
+uniform vec3 global_ambient;
 uniform vec3 light_ambient[NUM_LIGHTS];
 uniform vec3 light_diffuse[NUM_LIGHTS];
 uniform vec3 light_direct[NUM_LIGHTS];
@@ -65,9 +66,9 @@ uniform vec4 light_pos[NUM_LIGHTS];
 /* Negative Z of light matrix */
 uniform vec3 light_dir[NUM_LIGHTS];
 /* min_distance, outer_radius, delta, power */
-uniform vec4 point_attenuation[NUM_LIGHTS];
+uniform vec4 point_attn[NUM_LIGHTS];
 /* outer_cos, delta, power */
-uniform vec3 spot_attenuation[NUM_LIGHTS];
+uniform vec3 spot_attn[NUM_LIGHTS];
 #endif
 
 /*
@@ -77,7 +78,7 @@ uniform vec3 spot_attenuation[NUM_LIGHTS];
 #ifdef GBUFFER
 void encodeGBuffer (vec3 normal, vec3 diffuse, float ambientfactor, vec3 specular, float shininess);
 #endif
-#ifdef BLEND
+#ifdef FORWARD
 out vec4 color_fragment;
 void lighting (vec3 normal, vec4 materialDiffuse, float ambientfactor, vec4 specular, float shininess);
 #endif
@@ -132,50 +133,61 @@ void main()
 #ifdef GBUFFER
 	encodeGBuffer (normal, materialDiffuse.rgb, ambient, specular.rgb, shininess);
 #endif
-#ifdef BLEND
+#ifdef FORWARD
 	lighting (normal, materialDiffuse, ambient, specular, shininess);
 #endif
 #ifdef DENSITY
 	color_fragment = materialDiffuse;
-	//color_fragment = vec4(1.0, 0.5, 0.0, 1.0);
 #endif
 }
 
-#ifdef BLEND
+#ifdef FORWARD
 float
-point_intensity (int light, vec3 vertex2Light)
-{
-	float dist = length (vertex2Light);
-	if (dist < point_attenuation[light][0]) discard;
-	float s = clamp ((point_attenuation[light][1] - dist) / point_attenuation[light][2], 0.001, 1.0);
-	return pow (s, point_attenuation[light][3]);
+diffuse_intensity(vec3 normal, vec3 light_dir) {
+	return max(dot(normal, light_dir), 0.0);
 }
 
 float
-spot_intensity (int light, vec3 vertex2LightNormalized)
+point_attenuation(float distance, float radius, float falloff)
 {
-	float decay_cos = dot (-vertex2LightNormalized, light_dir[light]);
-	if (decay_cos < spot_attenuation[light][0]) discard;
-	float s = clamp ((decay_cos - spot_attenuation[light][0]) / spot_attenuation[light][1], 0.001, 1.0);
-	return pow (s, spot_attenuation[light][2]);
+	if (radius <= distance) return 0.0;
+    float s = distance / radius;
+    return (1.0 - s * s) * (1.0 - s * s) / (1.0 + falloff * s);
 }
 
-vec3
-ambient_light (int light, float light_intensity)
+float
+point_intensity (int light, vec3 v2l)
 {
-	return light_intensity * light_ambient[light];
+	float dist = length (v2l);
+	float radius = point_attn[light][1];
+	float falloff = point_attn[light][3];
+	return point_attenuation(dist, radius, falloff);
 }
 
+float
+spot_attenuation(float cosa, float inner, float outer, float falloff)
+{
+	if (cosa <= outer) return 0.0;
+	if (cosa >= inner) return 1.0;
+	float s = (inner - cosa) / (inner - outer);
+    return (1.0 - s * s) * (1.0 - s * s) / (1.0 + falloff * s);
+}
+
+float
+spot_intensity (int light, vec3 v2l_norm)
+{
+	float falloff = spot_attn[light][2];
+	if (falloff <= 0.0) return 1.0;
+
+	float inner = spot_attn[light][0] + spot_attn[light][1];
+	float outer = spot_attn[light][0];
+	float c_angle = dot (-v2l_norm, light_dir[light]);
+	return spot_attenuation(c_angle, inner, outer, falloff);
+}
 
 void
 lighting (vec3 normal, vec4 materialDiffuse, float ambientfactor, vec4 specular, float shininess)
 {
-	//vec3 vertex2Light = lightpos - vertexEye;
-	//vec3 vertex2Light = -lightdir;
-
-	//float source = point_intensity (vertex2Light);
-	//if (source < 0.001) discard;
-
 	vec3 eye2Vertex = -interpolatedVertexEye;
 	vec3 eye2VertexNormalized = normalize (eye2Vertex);
 	//vec3 vertex2LightNormalized = normalize (vertex2Light);
@@ -185,15 +197,19 @@ lighting (vec3 normal, vec4 materialDiffuse, float ambientfactor, vec4 specular,
 	// Ambient
 	//vec3 light = ambient_light (source, materialDiffuse);
 
-	vec3 light_intensity = vec3(0.0, 0.0, 0.0);
+	vec3 light_color = global_ambient;
 	for (int light = 0; light < 4; light++) {
-		vec3 vertex2Light = light_pos[light].xyz - light_pos[light].w * interpolatedVertexEye;
-		vec3 vertex2LightNormalized = normalize (vertex2Light);
-		float source = point_intensity (light, vertex2Light);
-		source *= spot_intensity (light, vertex2LightNormalized);
-		light_intensity += ambient_light (light, source);
+		//if(length(light_diffuse[light]) < 0.01) continue;
+		vec3 v2l = light_pos[light].xyz - light_pos[light].w * interpolatedVertexEye;
+		vec3 v2l_norm = normalize (v2l);
+
+		float intensity = point_intensity (light, v2l);
+		intensity *= spot_intensity (light, v2l_norm);
+
+		light_color += intensity * diffuse_intensity(normal, v2l_norm) * light_diffuse[light];
+		light_color += intensity * light_ambient[light];
 	}
-	vec4 color = vec4(materialDiffuse.rgb * light_intensity, materialDiffuse.a);
+	vec4 color = vec4(materialDiffuse.rgb * light_color, materialDiffuse.a);
 	color_fragment = color;
 }
 #endif

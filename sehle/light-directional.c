@@ -26,6 +26,8 @@ static void directional_light_instance_init (SehleDirectionalLightImplementation
 /* Material implementation */
 static void directional_light_bind (SehleMaterialImplementation *impl, SehleMaterialInstance *inst, SehleRenderContext *ctx, unsigned int render_type);
 static void directional_light_render (SehleRenderableImplementation *impl, SehleRenderableInstance *inst, SehleRenderContext *ctx, SehleProgram *prog, unsigned int render_type, void *data);
+/* Light implementation */
+static void dirl_setup_forward (SehleLightImplementation *impl, SehleLightInstance *inst, SehleRenderContext *ctx);
 
 enum Attributes {
 	VERTEX, NUM_ATTRIBUTES
@@ -35,7 +37,7 @@ static const char *attribute_names[] = {
 	"vertex"
 };
 
-static unsigned int directional_light_type = 0;
+unsigned int directional_light_type = 0;
 SehleDirectionalLightClass *directional_light_class = NULL;
 
 unsigned int
@@ -55,9 +57,9 @@ sehle_directional_light_get_type (void)
 static void
 directional_light_implementation_init (SehleDirectionalLightImplementation *impl)
 {
+	impl->light_impl.setup_forward = dirl_setup_forward;
 	/* Material implementation */
 	impl->light_impl.material_impl.bind = directional_light_bind;
-	//impl->light_impl.material_impl.render = directional_light_render;
 	impl->light_impl.renderable_impl.render = directional_light_render;
 }
 
@@ -69,6 +71,19 @@ directional_light_instance_init (SehleDirectionalLightImplementation *impl, Sehl
 		dlight->v2s[i] = EleaMat4x4fIdentity;
 		dlight->splits[i] = -INFINITY;
 	}
+}
+
+static void
+dirl_setup_forward (SehleLightImplementation *impl, SehleLightInstance *inst, SehleRenderContext *ctx)
+{
+	SehleDirectionalLightImplementation *dirl_impl = (SehleDirectionalLightImplementation *) impl;
+	SehleDirectionalLightInstance *dirl_inst = (SehleDirectionalLightInstance *) inst;
+	/* Use negative Z with W = 0 as light position */
+	EleaVec3f z_world, z_eye;
+	elea_mat3x4f_get_col_vec(&z_world, &inst->l2w, 2);
+	elea_mat3x4f_transform_vec3(&z_eye, &ctx->w2v, &z_world);
+	inst->info.pos = elea_vec4f_from_xyzw(z_eye.x, z_eye.y, z_eye.z, 0);
+	inst->info.dir = EleaVec3fX;
 }
 
 static void

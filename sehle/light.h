@@ -14,6 +14,7 @@
 typedef struct _SehleLightInstance SehleLightInstance;
 typedef struct _SehleLightImplementation SehleLightImplementation;
 typedef struct _SehleLightClass SehleLightClass;
+typedef struct _SehleLightInfo SehleLightInfo;
 
 #define SEHLE_TYPE_LIGHT sehle_light_get_type ()
 
@@ -59,6 +60,14 @@ extern "C" {
 
 SehleProgram *sehle_program_light_get_reference (SehleEngine *engine, unsigned int flags, unsigned int num_splits);
 
+struct _SehleLightInfo {
+	EleaVec4f pos;
+	EleaVec3f dir;
+	/* Min, max, power */
+	float point_attn[3];
+	float spot_attn[3];
+};
+
 struct _SehleLightInstance {
 	SehleRenderableInstance renderable_inst;
 	SehleMaterialInstance material_inst;
@@ -89,6 +98,8 @@ struct _SehleLightInstance {
 	/* Idenorm = ((cos_angle - outer_cos) / (inner_cos - outer_cos)) ** power */
 	float spot_attenuation[3];
 
+	SehleLightInfo info;
+
 	/* Geometry */
 	SehleVertexArray* va;
 
@@ -100,6 +111,8 @@ struct _SehleLightInstance {
 struct _SehleLightImplementation {
 	SehleRenderableImplementation renderable_impl;
 	SehleMaterialImplementation material_impl;
+	/* Set up Lightinfo for forward passes */
+	void (* setup_forward) (SehleLightImplementation *impl, SehleLightInstance *inst, SehleRenderContext *ctx);
 	/* Implementation should set relevant textures in light instance */
 	void (*render_shadow) (SehleLightImplementation *impl, SehleLightInstance *inst, SehleRenderContext *ctx);
 };

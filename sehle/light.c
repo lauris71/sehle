@@ -131,19 +131,12 @@ static void
 light_instance_init (SehleLightImplementation *impl, SehleLightInstance *inst)
 {
 	/* By default we are visible both in lighting and transparent pass but instances can change that */
-	inst->renderable_inst.render_stages = SEHLE_STAGE_TRANSPARENT | SEHLE_STAGE_LIGHTS;
+	inst->renderable_inst.render_stages = SEHLE_STAGE_TRANSPARENT | SEHLE_STAGE_FORWARD | SEHLE_STAGE_LIGHTS;
 	sehle_render_flags_clear (&inst->material_inst.state_flags, SEHLE_DEPTH_WRITE);
 	sehle_render_flags_set_depth_test (&inst->material_inst.state_flags, 1, SEHLE_DEPTH_GREATER);
 	sehle_render_flags_set_blend (&inst->material_inst.state_flags, 1, SEHLE_BLEND_ADD, SEHLE_BLEND_ONE, SEHLE_BLEND_ONE);
-	inst->material_inst.render_stages = SEHLE_STAGE_TRANSPARENT | SEHLE_STAGE_LIGHTS;
+	inst->material_inst.render_stages = SEHLE_STAGE_TRANSPARENT | SEHLE_STAGE_FORWARD | SEHLE_STAGE_LIGHTS;
 	inst->material_inst.render_types = SEHLE_RENDER_LIGHTMAP;
-	inst->point_attenuation[0] = 0;
-	inst->point_attenuation[1] = INFINITY;
-	inst->point_attenuation[2] = 1;
-	inst->point_attenuation[3] = 1;
-	inst->spot_attenuation[0] = -INFINITY;
-	inst->spot_attenuation[1] = 1;
-	inst->spot_attenuation[2] = 1;
 }
 
 static void
@@ -162,8 +155,9 @@ light_display (SehleRenderableImplementation *impl, SehleRenderableInstance *ins
 	if (displayctx->stages & SEHLE_STAGE_LIGHTS) {
 		sehle_render_context_schedule_render (ctx, impl, inst, &light_impl->material_impl, &light_inst->material_inst, NULL);
 	}
-	if (displayctx->stages & SEHLE_STAGE_TRANSPARENT) {
+	if (displayctx->stages & (SEHLE_STAGE_FORWARD | SEHLE_STAGE_TRANSPARENT)) {
 		/* fixme: We should calculate matrices etc. here */
+		if (light_impl->setup_forward) light_impl->setup_forward(light_impl, light_inst, ctx);
 		sehle_render_context_add_light (ctx, light_inst);
 	}
 }

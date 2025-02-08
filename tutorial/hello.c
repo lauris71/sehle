@@ -190,11 +190,6 @@ main(int argc, const char **argv)
     /* Update view parameters in render context  */
     sehle_render_context_set_view (&ctx, &v2w, &proj);
 
-    /*
-     * Bind render context - i.e. ensure that the engine state matches that of context
-     */
-    sehle_render_context_bind(&ctx);
-
     double start = arikkei_get_time();
     double time;
     unsigned int alive = 1;
@@ -251,7 +246,7 @@ main(int argc, const char **argv)
         EleaColor4f bg = {0.32f, 0.3f, 0.27f};
         sehle_render_context_clear (&ctx, 1, 1, &bg);
         /* Display renderable */
-        sehle_render_context_display_frame(&ctx, SEHLE_STATIC_MESH_RENDERABLE_IMPLEMENTATION, &mesh.renderable_inst, 1, SEHLE_STAGE_FORWARD | SEHLE_STAGE_SOLID);
+        sehle_render_context_display_frame(&ctx, SEHLE_STATIC_MESH_RENDERABLE_IMPLEMENTATION, &mesh.renderable_inst, 1, SEHLE_STAGE_FORWARD);
         /* Render everything that was submitted at display stage  */
         sehle_render_context_render (&ctx, SEHLE_STAGE_FORWARD, SEHLE_RENDER_FORWARD, 1, 0);
         /* Clean up context */

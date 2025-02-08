@@ -19,6 +19,8 @@
 
 static void point_light_implementation_init (SehlePointLightImplementation *impl);
 
+/* Light implementation */
+static void pointl_setup_forward (SehleLightImplementation *impl, SehleLightInstance *inst, SehleRenderContext *ctx);
 /* Material implementation */
 static void point_light_bind (SehleMaterialImplementation *impl, SehleMaterialInstance *inst, SehleRenderContext *ctx, unsigned int render_type);
 static void point_light_render (SehleRenderableImplementation *impl, SehleRenderableInstance *inst, SehleRenderContext *ctx, SehleProgram *prog, unsigned int render_type, void *data);
@@ -50,9 +52,25 @@ sehle_point_light_get_type(void)
 static void
 point_light_implementation_init (SehlePointLightImplementation *impl)
 {
+	impl->light_impl.setup_forward = pointl_setup_forward;
 	/* Material */
 	impl->light_impl.material_impl.bind = point_light_bind;
 	impl->light_impl.renderable_impl.render = point_light_render;
+}
+
+static void
+pointl_setup_forward (SehleLightImplementation *impl, SehleLightInstance *inst, SehleRenderContext *ctx)
+{
+	SehlePointLightImplementation *dirl_impl = (SehlePointLightImplementation *) impl;
+	SehlePointLightInstance *dirl_inst = (SehlePointLightInstance *) inst;
+	EleaVec3f p_world, p_eye;
+	elea_mat3x4f_get_translation(&p_world, &inst->l2w);
+	elea_mat3x4f_transform_point(&p_eye, &ctx->w2v, &p_world);
+	inst->info.pos = elea_vec4f_from_xyzw(p_eye.x, p_eye.y, p_eye.z, 1);
+	inst->info.dir = EleaVec3fX;
+	inst->info.point_attn[0] = inst->point_attenuation[0];
+	inst->info.point_attn[1] = inst->point_attenuation[1];
+	inst->info.point_attn[2] = inst->point_attenuation[3];
 }
 
 static void
@@ -103,4 +121,14 @@ sehle_point_light_set_point_attenuation (SehlePointLightInstance *point, float m
 	point->light_inst.point_attenuation[1] = outer_radius;
 	point->light_inst.point_attenuation[2] = outer_radius - inner_radius;
 	point->light_inst.point_attenuation[3] = power;
+}
+
+void
+sehle_point_light_update_visuals(SehlePointLightInstance *point)
+{
+	EleaVec3f c;
+	elea_mat3x4f_get_translation(&c, &point->light_inst.l2w);
+	EleaVec3f p0 = elea_vec3f_sub_xyz(c, point->light_inst.point_attenuation[0], point->light_inst.point_attenuation[0], point->light_inst.point_attenuation[0]);
+	EleaVec3f p1 = elea_vec3f_add_xyz(c, point->light_inst.point_attenuation[0], point->light_inst.point_attenuation[0], point->light_inst.point_attenuation[0]);
+	elea_aabox3f_set_minmax(&point->light_inst.renderable_inst.bbox, &p0, &p1);
 }

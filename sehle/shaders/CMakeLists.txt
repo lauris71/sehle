@@ -5,7 +5,7 @@ set(SHADER_FILES
     decodeGBuffer.txt
     depth-fragment.txt
     depth-vertex.txt
-    dns-fragment.txt
+    dns-fragment.glsl
     dns-vertex.txt
     encodeGBuffer.txt
     exposure.txt
