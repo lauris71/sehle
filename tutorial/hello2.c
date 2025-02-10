@@ -158,7 +158,7 @@ main(int argc, const char **argv)
      */
     SehleRenderContext ctx;
     sehle_render_context_setup(&ctx, engine);
-    ctx.global_ambient = elea_color4f_from_rgba(0.1f, 0.1f, 0.1f, 1);
+    ctx.global_ambient = EleaColor4fBlack;// elea_color4f_from_rgba(0.1f, 0.1f, 0.1f, 1);
     sehle_render_context_set_target (&ctx, tgt);
     sehle_render_context_set_viewport (&ctx, 0, 0, width, height);
     
@@ -264,8 +264,8 @@ main(int argc, const char **argv)
     az_interface_init((AZImplementation *) &dirl_impl, &dirl_inst);
     sehle_directional_light_setup(&dirl_inst, engine, 0, 0);
     dirl_inst.light_inst.ambient = EleaColor4fBlack;
-    dirl_inst.light_inst.diffuse = elea_color4f_from_rgba(0.2f, 0.2f, 0.5f, 1);
-    EleaVec3f light_pos = {-100, 100, 10};
+    dirl_inst.light_inst.diffuse = EleaColor4fBlue;
+    EleaVec3f light_pos = {-100, 100, 100};
     elea_mat3x4f_set_look_at(&dirl_inst.light_inst.l2w, &light_pos, &EleaVec3f0, &EleaVec3fZ);
     //sehle_render_context_add_light(&ctx, &dirl_inst.light_inst);
     sehle_renderable_list_add_child(&list, &dirl_impl.light_impl.renderable_impl, &dirl_inst.light_inst.renderable_inst);
@@ -275,9 +275,9 @@ main(int argc, const char **argv)
     az_implementation_init((AZImplementation *) &point_impl, SEHLE_TYPE_POINT_LIGHT);
     az_interface_init((AZImplementation *) &point_impl, &point_inst);
     sehle_point_light_setup(&point_inst, engine, 0);
-    point_inst.light_inst.ambient = EleaColor4fRed;
+    point_inst.light_inst.ambient = elea_color4f_div(EleaColor4fRed, 3);
     point_inst.light_inst.diffuse = EleaColor4fRed;// elea_color4f_from_rgba(0.65f, 0.65f, 0.75f, 1);
-    sehle_point_light_set_point_attenuation (&point_inst, 0.1f, 2.0f, 10.0f, 2);
+    sehle_point_light_set_point_attenuation (&point_inst, 2.0f, 10.0f, 2);
     EleaVec3f point_pos = {5, -5, 2};
     elea_mat3x4f_set_translate(&point_inst.light_inst.l2w, &point_pos);
     sehle_point_light_update_visuals(&point_inst);
@@ -288,8 +288,8 @@ main(int argc, const char **argv)
     az_implementation_init((AZImplementation *) &spot_impl, SEHLE_TYPE_SPOT_LIGHT);
     az_interface_init((AZImplementation *) &spot_impl, &spot_inst);
     sehle_spot_light_setup(&spot_inst, engine, 0);
-    spot_inst.light_inst.ambient = EleaColor4fBlack;
-    spot_inst.light_inst.diffuse = elea_color4f_from_rgba(0.0f, 0.75f, 0.0f, 1);
+    spot_inst.light_inst.ambient = elea_color4f_div(EleaColor4fGreen, 3);
+    spot_inst.light_inst.diffuse = EleaColor4fGreen;
     sehle_spot_light_set_point_attenuation (&spot_inst, 0.1f, 2.0f, 20.0f, 1);
     sehle_spot_light_set_spot_attenuation (&spot_inst, 0.6f, 0.75f, 1);
     EleaVec3f spot_pos = {-2, 2, 2};
@@ -366,6 +366,7 @@ main(int argc, const char **argv)
                 light_pos.x = 100 * cos(time);
                 light_pos.y = 100 * sin(time);
                 elea_mat3x4f_set_look_at(&dirl_inst.light_inst.l2w, &light_pos, &EleaVec3f0, &EleaVec3fZ);
+                dirl_inst.light_inst.diffuse = elea_color4f_mul(EleaColor4fBlue, (1 + sin(time / 2)) / 2);
 
                 point_pos.x = -5 * cos(-time);
                 point_pos.y = -5 * sin(-time);

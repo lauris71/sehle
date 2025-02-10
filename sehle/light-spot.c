@@ -74,11 +74,10 @@ spotl_setup_forward (SehleLightImplementation *impl, SehleLightInstance *inst, S
 	elea_mat3x4f_get_col_vec(&z_world, &inst->l2w, 2);
 	z_world = elea_vec3f_inv(z_world);
 	elea_mat3x4f_transform_vec3(&inst->info.dir, &ctx->w2v, &z_world);
-	inst->info.spot_attn[0] = inst->point_attenuation[0];
-	inst->info.spot_attn[1] = inst->point_attenuation[1];
-	inst->info.spot_attn[2] = inst->point_attenuation[3];
+	inst->info.point_attn[0] = inst->point_attenuation[1];
+	inst->info.point_attn[1] = inst->point_attenuation[3];
 	inst->info.spot_attn[0] = inst->spot_attenuation[0] + inst->spot_attenuation[1];
-	inst->info.spot_attn[1] = inst->spot_attenuation[1];
+	inst->info.spot_attn[1] = inst->spot_attenuation[0];
 	inst->info.spot_attn[2] = inst->spot_attenuation[2];
 }
 

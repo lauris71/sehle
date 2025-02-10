@@ -40,7 +40,7 @@ unsigned int sehle_point_light_get_type (void);
 
 void sehle_point_light_setup (SehlePointLightInstance *inst, SehleEngine *engine, float priority);
 
-void sehle_point_light_set_point_attenuation (SehlePointLightInstance *point, float min_distance, float inner_radius, float outer_radius, float power);
+void sehle_point_light_set_point_attenuation (SehlePointLightInstance *point, float inner_radius, float outer_radius, float power);
 
 void sehle_point_light_update_visuals(SehlePointLightInstance *point);
 

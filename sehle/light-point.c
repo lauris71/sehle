@@ -67,10 +67,8 @@ pointl_setup_forward (SehleLightImplementation *impl, SehleLightInstance *inst, 
 	elea_mat3x4f_get_translation(&p_world, &inst->l2w);
 	elea_mat3x4f_transform_point(&p_eye, &ctx->w2v, &p_world);
 	inst->info.pos = elea_vec4f_from_xyzw(p_eye.x, p_eye.y, p_eye.z, 1);
-	inst->info.dir = EleaVec3fX;
-	inst->info.point_attn[0] = inst->point_attenuation[0];
-	inst->info.point_attn[1] = inst->point_attenuation[1];
-	inst->info.point_attn[2] = inst->point_attenuation[3];
+	inst->info.point_attn[0] = inst->point_attenuation[1];
+	inst->info.point_attn[1] = inst->point_attenuation[3];
 }
 
 static void
@@ -114,10 +112,10 @@ sehle_point_light_setup (SehlePointLightInstance *inst, SehleEngine *engine, flo
 }
 
 void
-sehle_point_light_set_point_attenuation (SehlePointLightInstance *point, float min_distance, float inner_radius, float outer_radius, float power)
+sehle_point_light_set_point_attenuation (SehlePointLightInstance *point, float inner_radius, float outer_radius, float power)
 {
 	arikkei_return_if_fail (point != NULL);
-	point->light_inst.point_attenuation[0] = min_distance;
+	point->light_inst.point_attenuation[0] = 0;
 	point->light_inst.point_attenuation[1] = outer_radius;
 	point->light_inst.point_attenuation[2] = outer_radius - inner_radius;
 	point->light_inst.point_attenuation[3] = power;

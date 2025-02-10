@@ -249,18 +249,21 @@ material_dns_bind (SehleMaterialImplementation *impl, SehleMaterialInstance *ins
 		}
 		sehle_program_setUniform3fv (prog, SEHLE_PROGRAM_DNS_LIGHT_DIR, 4, light_dir[0].c);
 		/* Attenuations */
-		EleaVec4f point_attenuation[4];
+		float point_attenuation[SEHLE_RENDER_CONTEXT_MAX_LIGHTS * 2];
 		memset (point_attenuation, 0, sizeof (point_attenuation));
 		for (unsigned int i = 0; i < ctx->numlights; i++) {
-			memcpy (point_attenuation[i].c, ctx->lights[i]->point_attenuation, sizeof (point_attenuation[i]));
+			point_attenuation[2 * i] = ctx->lights[i]->info.point_attn[0];
+			point_attenuation[2 * i + 1] = ctx->lights[i]->info.point_attn[1];
 		}
-		sehle_program_setUniform4fv (prog, SEHLE_PROGRAM_DNS_POINT_ATTENUATION, 4, point_attenuation[0].c);
-		EleaVec3f spot_attenuation[4];
+		sehle_program_setUniform2fv (prog, SEHLE_PROGRAM_DNS_POINT_ATTENUATION, SEHLE_RENDER_CONTEXT_MAX_LIGHTS, point_attenuation);
+		float spot_attenuation[SEHLE_RENDER_CONTEXT_MAX_LIGHTS * 3];
 		memset (spot_attenuation, 0, sizeof (spot_attenuation));
 		for (unsigned int i = 0; i < ctx->numlights; i++) {
-			memcpy (spot_attenuation[i].c, ctx->lights[i]->spot_attenuation, sizeof spot_attenuation[i]);
+			spot_attenuation[3 * i] = ctx->lights[i]->info.spot_attn[0];
+			spot_attenuation[3 * i + 1] = ctx->lights[i]->info.spot_attn[1];
+			spot_attenuation[3 * i + 2] = ctx->lights[i]->info.spot_attn[2];
 		}
-		sehle_program_setUniform3fv (prog, SEHLE_PROGRAM_DNS_SPOT_ATTENUATION, 4, spot_attenuation[0].c);
+		sehle_program_setUniform3fv (prog, SEHLE_PROGRAM_DNS_SPOT_ATTENUATION, SEHLE_RENDER_CONTEXT_MAX_LIGHTS, spot_attenuation);
 	}
 	if (render_type == SEHLE_RENDER_GBUFFER) {
 		if (dns->program_flags & SEHLE_PROGRAM_DNS_HAS_NORMAL) {

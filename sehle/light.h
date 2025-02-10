@@ -63,8 +63,9 @@ SehleProgram *sehle_program_light_get_reference (SehleEngine *engine, unsigned i
 struct _SehleLightInfo {
 	EleaVec4f pos;
 	EleaVec3f dir;
-	/* Min, max, power */
-	float point_attn[3];
+	/* Radius, falloff */
+	float point_attn[2];
+	/* Inner cos, outer cos, falloff */
 	float spot_attn[3];
 };
 

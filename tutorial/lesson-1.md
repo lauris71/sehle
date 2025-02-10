@@ -184,7 +184,7 @@ At last we unmap buffers, i.e. tell OpenGL that the data can be moved to video m
     sehle_vertex_buffer_unmap(vbuf);
     sehle_index_buffer_unmap(ibuf);
 
-And attach vertex and index buffers to SehleVertexArray. The latter is simply and ocntainer of one or
+And attach vertex and index buffers to SehleVertexArray. The latter is simply and container of one or
 more vertex buffers and one index buffer that simplifies (and speeds up) vertex binding for render calls.
 
     SehleVertexArray *va = sehle_vertex_array_new_from_buffers(engine, (const uint8_t *) "HelloCube", vbuf, ibuf);
@@ -195,7 +195,7 @@ SehleRenderable is an interface, i.e. it has to be instantiated somewhere and it
 by creating Implementation. Renderables have two methods in implementation:
 
 - display - submit renderable to display list
-- render - draw the geometry (called from the displa list)
+- render - draw the geometry (called from the display list)
 
 For simple purposes we can use SehleStaticMesh - a block type that implements renderable interface. It is
 plain block type and thus has to be initialized and destroyed by hand. For the purpose of current tutorial

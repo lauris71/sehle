@@ -66,7 +66,7 @@ uniform vec4 light_pos[NUM_LIGHTS];
 /* Negative Z of light matrix */
 uniform vec3 light_dir[NUM_LIGHTS];
 /* min_distance, outer_radius, delta, power */
-uniform vec4 point_attn[NUM_LIGHTS];
+uniform vec2 point_attn[NUM_LIGHTS];
 /* outer_cos, delta, power */
 uniform vec3 spot_attn[NUM_LIGHTS];
 #endif
@@ -159,8 +159,9 @@ float
 point_intensity (int light, vec3 v2l)
 {
 	float dist = length (v2l);
-	float radius = point_attn[light][1];
-	float falloff = point_attn[light][3];
+	float radius = point_attn[light][0];
+	float falloff = point_attn[light][1];
+	if (falloff <= 0.0) return 1.0;
 	return point_attenuation(dist, radius, falloff);
 }
 
@@ -179,8 +180,8 @@ spot_intensity (int light, vec3 v2l_norm)
 	float falloff = spot_attn[light][2];
 	if (falloff <= 0.0) return 1.0;
 
-	float inner = spot_attn[light][0] + spot_attn[light][1];
-	float outer = spot_attn[light][0];
+	float inner = spot_attn[light][0];
+	float outer = spot_attn[light][1];
 	float c_angle = dot (-v2l_norm, light_dir[light]);
 	return spot_attenuation(c_angle, inner, outer, falloff);
 }

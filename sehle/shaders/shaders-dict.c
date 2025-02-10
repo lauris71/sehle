@@ -66,7 +66,7 @@ static struct MapData maps[] = {
     { "decodeGBuffer.txt", 3, 1, 675, 1478, 0 },
     { "depth-fragment.txt", 4, 1, 381, 969, 0 },
     { "depth-vertex.txt", 5, 1, 465, 1275, 0 },
-    { "dns-fragment.glsl", 6, 1, 1496, 5251, 0 },
+    { "dns-fragment.glsl", 6, 1, 1494, 5262, 0 },
     { "dns-vertex.txt", 7, 1, 582, 2110, 0 },
     { "encodeGBuffer.txt", 8, 1, 683, 1399, 0 },
     { "exposure.txt", 9, 1, 272, 504, 0 },
