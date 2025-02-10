@@ -11,6 +11,16 @@ SET(CMAKE_OSX_ARCHITECTURES "arm64" CACHE STRING "Build architectures for Mac OS
 
 find_package(SDL2)
 
+if(NOT HAS_ARIKKEI)
+add_subdirectory(arikkei)
+endif()
+if(NOT HAS_AZ)
+add_subdirectory(az)
+endif()
+if(NOT HAS_ELEA)
+add_subdirectory(elea)
+endif()
+
 add_subdirectory(sehle)
 
 if(SDL2_FOUND)

@@ -8,11 +8,15 @@ SET(CMAKE_OSX_ARCHITECTURES "arm64" CACHE STRING "Build architectures for Mac OS
 
 include(FindOpenGL)
 
+if(HAS_NR)
+set(NR_LIBS nr)
+endif()
+
 set(LIBS
     arikkei
     az
     elea
-    nr
+    ${NR_LIBS}
     sehle
     z
     ${SDL2_LIBRARIES}

@@ -1,7 +1,7 @@
 SET(SMAA_SOURCES smaa-dict.c smaa-dict.h)
 set(GLEW_SOURCES ${PROJECT_SOURCE_DIR}/GL/glew.c)
 
-if(NOT WITH_NR)
+if(NOT HAS_NR)
 	set(NR_SOURCES ${PROJECT_SOURCE_DIR}/nr/pixblock.c)
 endif()
 
