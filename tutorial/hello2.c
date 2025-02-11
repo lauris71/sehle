@@ -1,7 +1,9 @@
 #define __HELLO2_C__
 
 /*
- * sehle test
+ * Sehle tutorial 2
+ *
+ * Simple forward lighting
  */
 
 #include <stdio.h>
@@ -36,6 +38,10 @@ static SDL_GLContext gl_context;
 
 static int width = 800;
 static int height = 600;
+
+/*
+ * A helper function to create 20x20m ground platform
+ */
 
 static void
 create_platform(SehleStaticMesh *mesh, SehleEngine *engine)
@@ -203,6 +209,11 @@ main(int argc, const char **argv)
     /* Assign created buffers to vertex array */
     SehleVertexArray *va = sehle_vertex_array_new_from_buffers(engine, (const uint8_t *) "HelloCube", vbuf, ibuf);
 
+    /*
+     * As we create more than one renderable we want to put these into renderable collection so
+     * we do not have to call display separately for each item
+     * The collection also handles bbox and layewr based culling
+     */
     SehleRenderableList list;
     sehle_renderable_list_setup(&list, engine, 1);
 
@@ -222,22 +233,18 @@ main(int argc, const char **argv)
 
     /*
      * Create materials
-     * We use simple forward-rendered material
+     *
+     * As MaterialForward only knows about directional lights, we are going to use a more
+     * advanced MaterialDNS (Diffuse/Normal/Specular)
      */
-#if 1
+
     SehlematerialDNS *mat = sehle_material_dns_new(engine);
     sehle_material_dns_set_has_colors(mat, 0);
     sehle_material_dns_set_transparent(mat, 0, 0);
     SehleTexture2D *tex = sehle_engine_get_standard_texture(engine, SEHLE_TEXTURE_WHITE);
     sehle_material_dns_set_texture(mat, SEHLE_MATERIAL_DNS_MAP_DIFFUSE, tex);
     SehleMaterialImplementation *mat_impl = SEHLE_MATERIAL_DNS_MATERIAL_IMPLEMENTATION;
-#else
-    SehleMaterialControl *mat = sehle_material_control_new(engine);
-    sehle_material_control_set_has_colors(mat, 1);
-    mat->ambient = EleaColor4fWhite;
-    mat->color = EleaColor4fWhite;
-    SehleMaterialImplementation *mat_impl = SEHLE_MATERIAL_CONTROL_MATERIAL_IMPLEMENTATION;
-#endif
+
     /* Add material slot to static mesh and set material */
     sehle_static_mesh_resize_materials(&mesh, 1);
     sehle_static_mesh_set_material(&mesh, 0, mat_impl, &mat->material_inst);
@@ -251,12 +258,17 @@ main(int argc, const char **argv)
     mesh.frags[0].n_indices = va->ibuf->buffer.n_elements;
     mesh.frags[0].mat_idx = 0;
 
+    /* Create plafrom with helper function */
     SehleStaticMesh platform;
     create_platform(&platform, engine);
     sehle_renderable_list_add_child(&list, SEHLE_STATIC_MESH_RENDERABLE_IMPLEMENTATION, &platform.renderable_inst);
 
     /*
-     * Transparent pass needs lighting
+     * Now we are ready to create some lights
+     *
+     * Light are themselves renderables that can both:
+     * - render themselves to framebuffer in deferred lighting pass
+     * - give lighting information to materials in forward and transparent passes (we are using this)
      */
     SehleDirectionalLightImplementation dirl_impl;
     SehleDirectionalLightInstance dirl_inst;
@@ -267,7 +279,6 @@ main(int argc, const char **argv)
     dirl_inst.light_inst.diffuse = EleaColor4fBlue;
     EleaVec3f light_pos = {-100, 100, 100};
     elea_mat3x4f_set_look_at(&dirl_inst.light_inst.l2w, &light_pos, &EleaVec3f0, &EleaVec3fZ);
-    //sehle_render_context_add_light(&ctx, &dirl_inst.light_inst);
     sehle_renderable_list_add_child(&list, &dirl_impl.light_impl.renderable_impl, &dirl_inst.light_inst.renderable_inst);
 
     SehlePointLightImplementation point_impl;
@@ -276,7 +287,7 @@ main(int argc, const char **argv)
     az_interface_init((AZImplementation *) &point_impl, &point_inst);
     sehle_point_light_setup(&point_inst, engine, 0);
     point_inst.light_inst.ambient = elea_color4f_div(EleaColor4fRed, 3);
-    point_inst.light_inst.diffuse = EleaColor4fRed;// elea_color4f_from_rgba(0.65f, 0.65f, 0.75f, 1);
+    point_inst.light_inst.diffuse = EleaColor4fRed;
     sehle_point_light_set_point_attenuation (&point_inst, 2.0f, 10.0f, 2);
     EleaVec3f point_pos = {5, -5, 2};
     elea_mat3x4f_set_translate(&point_inst.light_inst.l2w, &point_pos);
@@ -294,11 +305,16 @@ main(int argc, const char **argv)
     sehle_spot_light_set_spot_attenuation (&spot_inst, 0.6f, 0.75f, 1);
     EleaVec3f spot_pos = {-2, 2, 2};
     elea_mat3x4f_set_look_at(&spot_inst.light_inst.l2w, &spot_pos, &EleaVec3f0, &EleaVec3fZ);
+    /* Spot light has complex geometry, in forward pass it is needed for bbox */
     sehle_spot_light_update_visuals(&spot_inst);
     sehle_renderable_list_add_child(&list, &spot_impl.light_impl.renderable_impl, &spot_inst.light_inst.renderable_inst);
 
-    /* Update list bbox and mask */
+    /*
+     * Once all renderables have been added to the collection we let the collection to
+     * update mask and bbox
+     */
     sehle_renderable_list_update_visuals(&list);
+
     /*
      * Set up view and projection matrices
      */
@@ -362,22 +378,26 @@ main(int argc, const char **argv)
                 break;
             default:
                 time = arikkei_get_time() - start;
+                /* Rotate the cube */
                 elea_mat3x4f_set_rotation_axis_angle(&mesh.r2w, &EleaVec3fZ, fmod(time / 10, 2 * M_PI));
+
+                /* Rotate directional light and change it's intensity */
                 light_pos.x = 100 * cos(time);
                 light_pos.y = 100 * sin(time);
                 elea_mat3x4f_set_look_at(&dirl_inst.light_inst.l2w, &light_pos, &EleaVec3f0, &EleaVec3fZ);
                 dirl_inst.light_inst.diffuse = elea_color4f_mul(EleaColor4fBlue, (1 + sin(time / 2)) / 2);
 
+                /* Rotate the position of point light */
                 point_pos.x = -5 * cos(-time);
                 point_pos.y = -5 * sin(-time);
                 elea_mat3x4f_set_translate(&point_inst.light_inst.l2w, &point_pos);
 
+                /* Rotate the direction of spot light */
                 EleaVec3f spot_dst;
                 spot_dst.x = spot_pos.x + 2 * cos(time);
                 spot_dst.y = spot_pos.y + 2 * sin(time);
                 spot_dst.z = 0;
                 elea_mat3x4f_set_look_at(&spot_inst.light_inst.l2w, &spot_pos, &spot_dst, &EleaVec3fZ);
-                sehle_spot_light_update_visuals(&spot_inst);
 
                 break;
         }

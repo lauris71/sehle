@@ -37,6 +37,10 @@ struct _SehleStaticMeshFragment {
 	unsigned int n_indices;
 };
 
+/**
+ * @brief A simple mesh renderable that supports multiple materials and LOD levels
+ * 
+ */
 struct _SehleStaticMesh {
 	SehleRenderable renderable_inst;
 
@@ -70,19 +74,51 @@ extern unsigned int sehle_static_mesh_type;
 extern SehleStaticMeshClass *sehle_static_mesh_class;
 #endif
 
-// Release all references and make mesh invisible
+/**
+ * @brief Release all references and make mesh invisible
+ * 
+ * @param mesh a static mesh
+ */
 void sehle_static_mesh_clear (SehleStaticMesh *mesh);
 
-/* Grab reference of vertex array */
+/**
+ * @brief Grab reference of vertex array
+ * 
+ * @param mesh a static mesh
+ * @param va vertex array
+ */
 void sehle_static_mesh_set_vertex_array (SehleStaticMesh *mesh, SehleVertexArray *va);
 /*
- * Grab reference of buffer
+ * 
  * Attribute is present if size > 0
  */
+
+/**
+ * @brief Grab reference of vertex buffer
+ * 
+ * Grab a reference of vertex buffer and set the vertex array from it's attributes that
+ * have size > 0.
+ * @param mesh a static mesh
+ * @param vbuf vertex buffer
+ */
 void sehle_static_mesh_set_vertex_data (SehleStaticMesh *mesh, SehleVertexBuffer *vbuf);
+/**
+ * @brief Grab reference of index buffer
+ * 
+ * @param mesh a static mesh
+ * @param ibuf index buffer
+ */
 void sehle_static_mesh_set_index_data (SehleStaticMesh *mesh, SehleIndexBuffer *ibuf);
 
-// Allocate space for required number of textures
+
+/**
+ * @brief Allocate space for required number of materials
+ * 
+ * If hte current number of materials is > length, the references of remaining materials
+ * are dropped.
+ * @param mesh a static mesh
+ * @param length the number of materials
+ */
 void sehle_static_mesh_resize_materials (SehleStaticMesh *mesh, unsigned int length);
 // Set material and grab reference
 void sehle_static_mesh_set_material (SehleStaticMesh *mesh, unsigned int idx, SehleMaterialImplementation *impl, SehleMaterialInstance *inst);
