@@ -40,8 +40,8 @@ unsigned int sehle_spot_light_get_type (void);
 
 void sehle_spot_light_setup (SehleSpotLightInstance *inst, SehleEngine *engine, float priority);
 
-void sehle_spot_light_set_point_attenuation (SehleSpotLightInstance *inst, float min_distance, float inner_radius, float outer_radius, float power);
-void sehle_spot_light_set_spot_attenuation (SehleSpotLightInstance *inst, float inner_angle, float outer_angle, float power);
+void sehle_spot_light_set_point_attenuation (SehleSpotLightInstance *inst, float min_dist, float radius, float falloff);
+void sehle_spot_light_set_spot_attenuation (SehleSpotLightInstance *inst, float inner_angle, float outer_angle, float falloff);
 
 void sehle_spot_light_update_geometry (SehleSpotLightInstance *inst);
 

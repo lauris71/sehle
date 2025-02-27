@@ -112,6 +112,7 @@ sehle_engine_initialize_render_state(SehleEngine *engine) {
     sehle_render_state_set_default(&engine->render_state);
     if (!engine->running) return;
     glFrontFace(GL_CCW);
+	glCullFace(GL_BACK);
     sehle_set_render_state(&engine->render_state);
 }
 

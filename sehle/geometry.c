@@ -97,7 +97,7 @@ sehle_build_geometry (SehleEngine *engine, unsigned int type)
 		float *attrs;
 		unsigned int *indices, x, y;
 		static const unsigned int p[] = { 0, 1, 2, 0, 2, 3 };
-		va = sehle_vertex_array_new_from_attrs (engine, NULL, 81, 384, SEHLE_ATTRIBUTE_VERTEX, 0, SEHLE_ATTRIBUTE_TEXCOORD, 2, -1);
+		va = sehle_vertex_array_new_from_attrs (engine, NULL, 81, 384, SEHLE_ATTRIBUTE_VERTEX, 3, SEHLE_ATTRIBUTE_TEXCOORD, 2, -1);
 		attrs = (float *) sehle_vertex_buffer_map (va->vbufs[0], SEHLE_BUFFER_WRITE);
 		for (y = 0; y <= 8; y++) {
 			for (x = 0; x <= 8; x++) {

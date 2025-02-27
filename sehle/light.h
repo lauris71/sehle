@@ -14,6 +14,8 @@
 typedef struct _SehleLightInstance SehleLightInstance;
 typedef struct _SehleLightImplementation SehleLightImplementation;
 typedef struct _SehleLightClass SehleLightClass;
+typedef struct _SehlePointAttenuation SehlePointAttenuation;
+typedef struct _SehleSpotAttenuation SehleSpotAttenuation;
 typedef struct _SehleLightInfo SehleLightInfo;
 
 #define SEHLE_TYPE_LIGHT sehle_light_get_type ()
@@ -60,6 +62,28 @@ extern "C" {
 
 SehleProgram *sehle_program_light_get_reference (SehleEngine *engine, unsigned int flags, unsigned int num_splits);
 
+struct _SehlePointAttenuation {
+	union {
+		struct {
+			float min_dist;
+			float radius;
+			float falloff;
+		};
+		float c[3];
+	};
+};
+
+struct _SehleSpotAttenuation {
+	union {
+		struct {
+			float inner_cos;
+			float outer_cos;
+			float falloff;
+		};
+		float c[3];
+	};
+};
+
 struct _SehleLightInfo {
 	EleaVec4f pos;
 	EleaVec3f dir;
@@ -90,14 +114,14 @@ struct _SehleLightInstance {
 	EleaColor4f ambient;
 	EleaColor4f diffuse;
 	EleaColor4f direct;
-	/* Point attenuation
-	   min_distance, outer_radius, delta, power
-	   Idenorm = ((outer - distance) / (outer - inner)) ** power */
-	float point_attenuation[4];
-	/* Spot attenuation */
-	/* outer_cos, cos_delta, power */
-	/* Idenorm = ((cos_angle - outer_cos) / (inner_cos - outer_cos)) ** power */
-	float spot_attenuation[3];
+	/**
+	 * @brief Point attenuation parameters
+	 */
+	SehlePointAttenuation point_attn;
+	/**
+	 * @brief Spot attenuation parameters
+	 */
+	SehleSpotAttenuation spot_attn;
 
 	SehleLightInfo info;
 

@@ -233,13 +233,9 @@ material_dns_bind (SehleMaterialImplementation *impl, SehleMaterialInstance *ins
 		memset (light_pos, 0, sizeof (light_pos));
 		for (unsigned int i = 0; i < ctx->numlights; i++) {
 			light_pos[i] = ctx->lights[i]->info.pos;
-			//EleaVec3f t;
-			//elea_mat3x4f_get_translation (&t, &ctx->lights[i]->l2w);
-			//elea_mat3x4f_transform_point ((EleaVec3f *) &light_pos[i], &ctx->w2v, &t);
-			//light_pos[i].w = 0;
 		}
 		sehle_program_setUniform4fv (prog, SEHLE_PROGRAM_DNS_LIGHT_POS, 4, light_pos[0].c);
-		EleaVec3f light_dir[4];
+		EleaVec3f light_dir[SEHLE_RENDER_CONTEXT_MAX_LIGHTS];
 		memset (light_dir, 0, sizeof light_dir);
 		for (unsigned int i = 0; i < ctx->numlights; i++) {
 			EleaVec3f t;

@@ -23,9 +23,9 @@
 static const char *uniform_names[] = {
 	"l2w_w2v_projection", "map_rprojection", "viewportinv",
 	"depthSampler", "normalSampler", "albedoSampler", "specularSampler",
-	"lightpos", "lightdir",
+	"light_pos", "lightdir",
 	"ambient", "diffuse", "direct",
-	"point_attenuation", "spot_attenuation",
+	"point_attn", "spot_attn",
 	"splits", "eye2shadow", "shadowSampler", "densitySampler"
 };
 
@@ -52,7 +52,7 @@ light_get_shader (SehleEngine *engine, unsigned int shader_type, unsigned int fl
 			(flags & SEHLE_PROGRAM_LIGHT_HAS_SHADOW) != 0,
 			(flags & SEHLE_PROGRAM_LIGHT_HAS_DENSITY) != 0,
 			num_splits);
-		sources[0] = (shader_type == SEHLE_SHADER_VERTEX) ? "light-vertex.txt" : "light-fragment.txt";
+		sources[0] = (shader_type == SEHLE_SHADER_VERTEX) ? "light-vertex.glsl" : "light-fragment.glsl";
 		sehle_shader_build_from_header_files (shader, (const unsigned char *) c, -1, (const unsigned char **) sources, 1);
 	}
 	return shader;

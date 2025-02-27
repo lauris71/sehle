@@ -36,8 +36,7 @@ SehleIndexBuffer *sehle_index_buffer_new (SehleEngine *engine, const char *id, u
 
 void sehle_index_buffer_resize (SehleIndexBuffer *ibuf, unsigned int size);
 
-ARIKKEI_INLINE
-uint32_t *
+static inline uint32_t *
 sehle_index_buffer_map (SehleIndexBuffer *ibuf, unsigned int flags)
 {
 	return (uint32_t *) sehle_buffer_map (&ibuf->buffer, flags);

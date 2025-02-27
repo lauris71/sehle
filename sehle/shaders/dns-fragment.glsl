@@ -65,9 +65,9 @@ uniform vec3 light_direct[NUM_LIGHTS];
 uniform vec4 light_pos[NUM_LIGHTS];
 /* Negative Z of light matrix */
 uniform vec3 light_dir[NUM_LIGHTS];
-/* min_distance, outer_radius, delta, power */
+/* Radius, falloff */
 uniform vec2 point_attn[NUM_LIGHTS];
-/* outer_cos, delta, power */
+/* Inner cos, outer cos, falloff */
 uniform vec3 spot_attn[NUM_LIGHTS];
 #endif
 
@@ -177,40 +177,39 @@ spot_attenuation(float cosa, float inner, float outer, float falloff)
 float
 spot_intensity (int light, vec3 v2l_norm)
 {
-	float falloff = spot_attn[light][2];
-	if (falloff <= 0.0) return 1.0;
-
 	float inner = spot_attn[light][0];
 	float outer = spot_attn[light][1];
-	float c_angle = dot (-v2l_norm, light_dir[light]);
+	float falloff = spot_attn[light][2];
+	if (falloff <= 0.0) return 1.0;
+	float c_angle = -dot(v2l_norm, light_dir[light]);
 	return spot_attenuation(c_angle, inner, outer, falloff);
 }
 
 void
 lighting (vec3 normal, vec4 materialDiffuse, float ambientfactor, vec4 specular, float shininess)
 {
-	vec3 eye2Vertex = -interpolatedVertexEye;
-	vec3 eye2VertexNormalized = normalize (eye2Vertex);
-	//vec3 vertex2LightNormalized = normalize (vertex2Light);
+	vec3 v2e = -interpolatedVertexEye;
+	vec3 v2e_norm = normalize (v2e);
 
-	//source *= spot_intensity (vertex2LightNormalized);
-
-	// Ambient
-	//vec3 light = ambient_light (source, materialDiffuse);
-
-	vec3 light_color = global_ambient;
-	for (int light = 0; light < 4; light++) {
-		//if(length(light_diffuse[light]) < 0.01) continue;
+	vec3 diffuse_light = global_ambient;
+	vec3 specular_light = vec3(0, 0, 0);
+	for (int light = 0; light < 3; light++) {
 		vec3 v2l = light_pos[light].xyz - light_pos[light].w * interpolatedVertexEye;
 		vec3 v2l_norm = normalize (v2l);
 
 		float intensity = point_intensity (light, v2l);
 		intensity *= spot_intensity (light, v2l_norm);
 
-		light_color += intensity * diffuse_intensity(normal, v2l_norm) * light_diffuse[light];
-		light_color += intensity * light_ambient[light];
+		diffuse_light += intensity * diffuse_intensity(normal, v2l_norm) * light_diffuse[light];
+		diffuse_light += intensity * light_ambient[light];
+
+		vec3 halfv = normalize(v2e_norm + v2l_norm);
+		float spec_intensity = dot(halfv, normal);
+		spec_intensity = pow(spec_intensity, 16);
+		specular_light += spec_intensity * light_direct[light];
 	}
-	vec4 color = vec4(materialDiffuse.rgb * light_color, materialDiffuse.a);
+	vec4 color = vec4(materialDiffuse.rgb * diffuse_light + specular.rgb * specular_light, materialDiffuse.a);
+	//vec4 color = vec4(specular_light, materialDiffuse.a);
 	color_fragment = color;
 }
 #endif

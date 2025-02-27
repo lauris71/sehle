@@ -39,6 +39,22 @@ target_link_libraries(hello2
     ${LIBS}
 )
 
+ADD_EXECUTABLE(hello3
+    hello3.c
+)
+
+target_link_libraries(hello3
+    ${LIBS}
+)
+
+ADD_EXECUTABLE(hello4
+    hello4.c
+)
+
+target_link_libraries(hello4
+    ${LIBS}
+)
+
 include_directories(
     ${CMAKE_SOURCE_DIR}/arikkei
     ${CMAKE_SOURCE_DIR}/az

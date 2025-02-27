@@ -59,13 +59,13 @@ extern const char foliage_gbuf_vertex_txt_0_data[];
 extern unsigned int foliage_gbuf_vertex_txt_0_size;
 extern uint64_t foliage_gbuf_vertex_txt_size;
 
-extern const char light_fragment_txt_0_data[];
-extern unsigned int light_fragment_txt_0_size;
-extern uint64_t light_fragment_txt_size;
+extern const char light_fragment_glsl_0_data[];
+extern unsigned int light_fragment_glsl_0_size;
+extern uint64_t light_fragment_glsl_size;
 
-extern const char light_vertex_txt_0_data[];
-extern unsigned int light_vertex_txt_0_size;
-extern uint64_t light_vertex_txt_size;
+extern const char light_vertex_glsl_0_data[];
+extern unsigned int light_vertex_glsl_0_size;
+extern uint64_t light_vertex_glsl_size;
 
 extern const char lightvolume_fragment_txt_0_data[];
 extern unsigned int lightvolume_fragment_txt_0_size;

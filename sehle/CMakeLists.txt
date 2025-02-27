@@ -17,6 +17,7 @@ find_program(RC666 NAMES rc666
         ${CMAKE_SOURCE_DIR}/build/rc666
         ${CMAKE_SOURCE_DIR}/rc666/build
 )
+message("RC666: ${RC666}")
 
 if(RC666)
 	add_subdirectory(shaders)

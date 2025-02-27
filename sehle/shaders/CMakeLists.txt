@@ -12,8 +12,8 @@ set(SHADER_FILES
     findTangentSpace.txt
     foliage-gbuf-fragment.txt
     foliage-gbuf-vertex.txt
-    light-fragment.txt
-    light-vertex.txt
+    light-fragment.glsl
+    light-vertex.glsl
     lightvolume-fragment.txt
     occlusion-fragment.txt
     occlusion-vertex.txt

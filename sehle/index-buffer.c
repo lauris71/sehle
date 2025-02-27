@@ -46,4 +46,3 @@ sehle_index_buffer_resize (SehleIndexBuffer *ibuf, unsigned int size)
 	arikkei_return_if_fail (!SEHLE_BUFFER_IS_MAPPED ((SehleBuffer *) ibuf));
 	sehle_buffer_resize (&ibuf->buffer, size, 1);
 }
-

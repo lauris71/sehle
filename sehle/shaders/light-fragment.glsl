@@ -30,7 +30,7 @@ uniform vec4 viewportinv;
 uniform mat4 map_rprojection;
 uniform sampler2D depthSampler, normalSampler, albedoSampler, specularSampler;
 
-uniform vec3 lightpos;
+uniform vec4 light_pos;
 
 #if SPOT || DIRECTIONAL
 uniform vec3 lightdir;
@@ -41,13 +41,13 @@ uniform vec3 diffuse;
 uniform vec3 direct;
 
 #if POINT
-/* min_distance, outer_radius, delta, power */
-uniform vec4 point_attenuation;
+/* Min distance, radius, falloff */
+uniform vec3 point_attn;
 #endif
 
 #if SPOT
-/* outer_cos, delta, power */
-uniform vec3 spot_attenuation;
+/* Inner cos, outer cos, falloff */
+uniform vec3 spot_attn;
 #endif
 
 #if HAS_SHADOW
@@ -62,27 +62,50 @@ uniform sampler2D densitySampler;
 
 out vec4 color_fragment;
 
+in vec4 interpolatedColor;
+
 void decodeGBuffer (in vec4 albedoData, in vec4 normalData, in vec4 specualrData, out vec3 albedo, out vec3 normal, out vec3 specular, out float ambient, out float shininess);
 
 #if POINT
 float
-point_intensity (vec3 vertex2Light)
+point_attenuation(float distance, float radius, float falloff)
 {
-	float dist = length (vertex2Light);
-	if (dist < point_attenuation[0]) discard;
-	float s = clamp ((point_attenuation[1] - dist) / point_attenuation[2], 0.0, 1.0);
-	return pow (s, point_attenuation[3]);
+	if (radius <= distance) return 0.0;
+    float s = distance / radius;
+    return (1.0 - s * s) * (1.0 - s * s) / (1.0 + falloff * s);
+}
+
+float
+point_intensity (vec3 v2l)
+{
+	float dist = length (v2l);
+	float radius = point_attn[1];
+	float falloff = point_attn[2];
+	if (falloff <= 0.0) return 1.0;
+	if (dist < point_attn[0]) return 0.0;
+	return point_attenuation(dist, radius, falloff);
 }
 #endif
 
 #if SPOT
 float
-spot_intensity (vec3 vertex2LightNormalized)
+spot_attenuation(float cosa, float inner, float outer, float falloff)
 {
-	float decay_cos = dot (-vertex2LightNormalized, lightdir);
-	if (decay_cos < spot_attenuation[0]) discard;
-	float s = clamp ((decay_cos - spot_attenuation[0]) / spot_attenuation[1], 0.0, 1.0);
-	return pow (s, spot_attenuation[2]);
+	if (cosa <= outer) return 0.0;
+	if (cosa >= inner) return 1.0;
+	float s = (inner - cosa) / (inner - outer);
+    return (1.0 - s * s) * (1.0 - s * s) / (1.0 + falloff * s);
+}
+
+float
+spot_intensity (vec3 v2l_norm, vec3 l_dir)
+{
+	float inner = spot_attn[0];
+	float outer = spot_attn[1];
+	float falloff = spot_attn[2];
+	if (falloff <= 0.0) return 1.0;
+	float c_angle = -dot(v2l_norm, l_dir);
+	return spot_attenuation(c_angle, inner, outer, falloff);
 }
 #endif
 
@@ -144,33 +167,31 @@ shadow_density (vec3 vertexEye, vec3 normalEye)
 vec3
 lighting (vec3 vertexEye, vec3 normalEye, vec3 materialDiffuse, vec3 materialSpecular, float materialShininess, float ambientFactor)
 {
-#if POINT
-	vec3 vertex2Light = lightpos - vertexEye;
-#else
-	vec3 vertex2Light = -lightdir;
-#endif
+	vec3 v2e = -vertexEye;
+	vec3 v2e_norm = normalize (v2e);
+	vec3 v2l = light_pos.xyz - light_pos.w * vertexEye;
+	vec3 v2l_norm = normalize (v2l);
 
 #if POINT
-	float source = point_intensity (vertex2Light);
+	float source = point_intensity (v2l);
 	if (source < 0.001) discard;
 #else
 	float source = 1.0;
 #endif
 
-	vec3 eye2Vertex = -vertexEye;
-	vec3 eye2VertexNormalized = normalize (eye2Vertex);
-	vec3 vertex2LightNormalized = normalize (vertex2Light);
-
 #if SPOT
-	source *= spot_intensity (vertex2LightNormalized);
+	source *= spot_intensity (v2l_norm, lightdir);
 	if (source < 0.001) discard;
 #endif
+
+	vec3 eye2Vertex = -vertexEye;
+	vec3 eye2VertexNormalized = normalize (eye2Vertex);
 
 	// Ambient
 	vec3 light = ambient_light (source * ambientFactor, materialDiffuse);
 
 	// Diffuse
-	light += diffuse_light (source, materialDiffuse, normalEye, vertex2LightNormalized);
+	light += diffuse_light (source, materialDiffuse, normalEye, v2l_norm);
 
 	// Direct
 	vec3 lightIntensity = vec3(source, source, source);
@@ -178,7 +199,7 @@ lighting (vec3 vertexEye, vec3 normalEye, vec3 materialDiffuse, vec3 materialSpe
 	lightIntensity *= shadow_density (vertexEye, normalEye);
 #endif
 	// Lighted
-	light += direct_light (lightIntensity, materialDiffuse, materialSpecular, materialShininess, normalEye, eye2VertexNormalized, vertex2LightNormalized);
+	light += direct_light (lightIntensity, materialDiffuse, materialSpecular, materialShininess, normalEye, eye2VertexNormalized, v2l_norm);
 
 	return light;
 }
@@ -202,5 +223,6 @@ void main()
 
 	vec3 color = lighting (vertexEye.xyz, normal, albedo, specular, shininess, ambientFactor);
 
+	//color_fragment = vec4(1.0, 1.0, 0.0, 1.0);
 	color_fragment = vec4(color, 1.0);
 }

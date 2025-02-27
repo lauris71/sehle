@@ -67,8 +67,8 @@ pointl_setup_forward (SehleLightImplementation *impl, SehleLightInstance *inst, 
 	elea_mat3x4f_get_translation(&p_world, &inst->l2w);
 	elea_mat3x4f_transform_point(&p_eye, &ctx->w2v, &p_world);
 	inst->info.pos = elea_vec4f_from_xyzw(p_eye.x, p_eye.y, p_eye.z, 1);
-	inst->info.point_attn[0] = inst->point_attenuation[1];
-	inst->info.point_attn[1] = inst->point_attenuation[3];
+	inst->info.point_attn[0] = inst->point_attn.radius;
+	inst->info.point_attn[1] = inst->point_attn.falloff;
 }
 
 static void
@@ -77,10 +77,15 @@ point_light_bind (SehleMaterialImplementation *impl, SehleMaterialInstance *inst
 	SehlePointLightInstance *point = SEHLE_POINT_LIGHT_FROM_MATERIAL_INSTANCE (inst);
 	EleaVec3f l_pos;
 	sehle_light_bind_common (&point->light_inst, ctx);
-	elea_mat3x4f_get_translation (&l_pos, &point->light_inst.l2w);
-	elea_mat3x4f_transform_point (&l_pos, &ctx->w2v, &l_pos);
-	sehle_program_setUniform3fv (inst->programs[0], SEHLE_LIGHT_LIGHTPOS, 1, l_pos.c);
-	sehle_program_setUniform4fv (inst->programs[0], SEHLE_LIGHT_POINT_ATTENUATION, 1, point->light_inst.point_attenuation);
+
+	/* Light position */
+	EleaVec3f p_world, p_eye;
+	elea_mat3x4f_get_translation(&p_world, &point->light_inst.l2w);
+	elea_mat3x4f_transform_point(&p_eye, &ctx->w2v, &p_world);
+	EleaVec4f light_pos = {p_eye.x, p_eye.y, p_eye.z, 1};
+	sehle_program_setUniform4fv (inst->programs[0], SEHLE_LIGHT_LIGHTPOS, 1, light_pos.c);
+
+	sehle_program_setUniform3fv (inst->programs[0], SEHLE_LIGHT_POINT_ATTENUATION, 1, point->light_inst.point_attn.c);
 }
 
 static void
@@ -92,12 +97,17 @@ point_light_render (SehleRenderableImplementation *impl, SehleRenderableInstance
 	EleaMat3x4f m;
 	EleaMat4x4f m_proj;
 	elea_mat3x4f_multiply (&m, &ctx->w2v, &point->light_inst.l2w);
-	elea_mat3x4f_scale_self_right_xyz (&m, point->light_inst.point_attenuation[1], point->light_inst.point_attenuation[1], point->light_inst.point_attenuation[1]);
+	elea_mat3x4f_scale_self_right_xyz (&m, point->light_inst.point_attn.radius, point->light_inst.point_attn.radius, point->light_inst.point_attn.radius);
 	elea_mat4x4f_multiply_mat3x4 (&m_proj, &ctx->proj, &m);
 	sehle_program_setUniformMatrix4fv (point->light_inst.material_inst.programs[0], SEHLE_LIGHT_L2W_W2V_PROJECTION, 1, m_proj.c);
 	// Same for shadow lookup
 	// sehle_program_setUniformMatrix4fv (inst->programs[0], E2S, 1, e2s[light]);
+	//glEnable(GL_DEPTH_TEST);
+	//glDepthFunc(GL_ALWAYS);
+	//glEnable(GL_CULL_FACE);
+	//glCullFace(GL_BACK);
 	sehle_vertex_array_render_triangles (point->light_inst.va, 1, 0, point->light_inst.va->ibuf->buffer.n_elements);
+	//glCullFace(GL_BACK);
 }
 
 void
@@ -112,13 +122,12 @@ sehle_point_light_setup (SehlePointLightInstance *inst, SehleEngine *engine, flo
 }
 
 void
-sehle_point_light_set_point_attenuation (SehlePointLightInstance *point, float inner_radius, float outer_radius, float power)
+sehle_point_light_set_point_attenuation (SehlePointLightInstance *point, float min_dist, float radius, float falloff)
 {
 	arikkei_return_if_fail (point != NULL);
-	point->light_inst.point_attenuation[0] = 0;
-	point->light_inst.point_attenuation[1] = outer_radius;
-	point->light_inst.point_attenuation[2] = outer_radius - inner_radius;
-	point->light_inst.point_attenuation[3] = power;
+	point->light_inst.point_attn.min_dist = min_dist;
+	point->light_inst.point_attn.radius = radius;
+	point->light_inst.point_attn.falloff = falloff;
 }
 
 void
@@ -126,7 +135,7 @@ sehle_point_light_update_visuals(SehlePointLightInstance *point)
 {
 	EleaVec3f c;
 	elea_mat3x4f_get_translation(&c, &point->light_inst.l2w);
-	EleaVec3f p0 = elea_vec3f_sub_xyz(c, point->light_inst.point_attenuation[0], point->light_inst.point_attenuation[0], point->light_inst.point_attenuation[0]);
-	EleaVec3f p1 = elea_vec3f_add_xyz(c, point->light_inst.point_attenuation[0], point->light_inst.point_attenuation[0], point->light_inst.point_attenuation[0]);
+	EleaVec3f p0 = elea_vec3f_sub_xyz(c, point->light_inst.point_attn.radius, point->light_inst.point_attn.radius, point->light_inst.point_attn.radius);
+	EleaVec3f p1 = elea_vec3f_add_xyz(c, point->light_inst.point_attn.radius, point->light_inst.point_attn.radius, point->light_inst.point_attn.radius);
 	elea_aabox3f_set_minmax(&point->light_inst.renderable_inst.bbox, &p0, &p1);
 }

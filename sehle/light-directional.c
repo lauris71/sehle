@@ -92,6 +92,14 @@ directional_light_bind (SehleMaterialImplementation *impl, SehleMaterialInstance
 	SehleDirectionalLightInstance *dlight = SEHLE_DIRECTIONAL_LIGHT_FROM_MATERIAL_INSTANCE (inst);
 	EleaVec3f l_dir;
 	sehle_light_bind_common (&dlight->light_inst, ctx);
+
+	/* Light position */
+	EleaVec3f z_world, z_eye;
+	elea_mat3x4f_get_col_vec(&z_world, &dlight->light_inst.l2w, 2);
+	elea_mat3x4f_transform_vec3(&z_eye, &ctx->w2v, &z_world);
+	EleaVec4f light_pos = {z_eye.x, z_eye.y, z_eye.z, 0};
+	sehle_program_setUniform4fv (inst->programs[0], SEHLE_LIGHT_LIGHTPOS, 1, light_pos.c);
+
 	elea_mat3x4f_get_col_vec (&l_dir, &dlight->light_inst.l2w, 2);
 	l_dir = elea_vec3f_inv (l_dir);
 	elea_mat3x4f_transform_vec3 (&l_dir, &ctx->w2v, &l_dir);

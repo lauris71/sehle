@@ -81,7 +81,7 @@ vertex_array_build (SehleResource* res)
 		glGenVertexArrays (1, &va->resource.gl_handle);
 		SEHLE_CHECK_ERRORS (0);
 	}
-	glBindVertexArray (va->resource.gl_handle);
+	glBindVertexArray(va->resource.gl_handle);
 	SEHLE_CHECK_ERRORS (0);
 	for (unsigned int i = 0; i < SEHLE_NUM_VERTEX_BINDINGS; i++) {
 		if (va->vbufs[i]) {
@@ -94,6 +94,11 @@ vertex_array_build (SehleResource* res)
 	if (va->ibuf) {
 		sehle_index_buffer_bind (va->ibuf);
 	}
+	/*
+	 * We have to keep VertexArray unbound whenever it is not in use
+	 * Otherwise arbitrary Vertex/Index buffer bind (e.g. mapping) replaces the corresponding array
+	 */
+	glBindVertexArray(0);
 	sehle_resource_set_sate (res, SEHLE_RESOURCE_STATE_READY);
 }
 
@@ -162,10 +167,9 @@ sehle_vertex_array_bind (SehleVertexArray* va)
 	if (!va->resource.gl_handle || (sehle_resource_get_sate (&va->resource) == SEHLE_RESOURCE_STATE_MODIFIED)) {
 		/* Building vertex array leaves it bound */
 		sehle_resource_build (&va->resource);
-	} else {
-		glBindVertexArray (va->resource.gl_handle);
-		SEHLE_CHECK_ERRORS (0);
 	}
+	glBindVertexArray (va->resource.gl_handle);
+	SEHLE_CHECK_ERRORS (0);
 }
 
 void
@@ -195,6 +199,9 @@ sehle_vertex_array_render_triangles (SehleVertexArray *va, unsigned int bind, un
 		SEHLE_CHECK_ERRORS (0);
 	}
 	glDrawElements (GL_TRIANGLES, n_indices, GL_UNSIGNED_INT, (uint32_t *) NULL + first_index);
+	if (bind) {
+		glBindVertexArray(0);
+	}
 #ifdef SEHLE_PERFORMANCE_MONITOR
 	va->resource.engine->counter.indices += n_indices;
 	va->resource.engine->counter.indexinstances += n_indices;
@@ -211,7 +218,9 @@ sehle_vertex_array_render_triangles_instanced (SehleVertexArray *va, unsigned in
 		SEHLE_CHECK_ERRORS (0);
 	}
 	glDrawElementsInstanced (GL_TRIANGLES, n_indices, GL_UNSIGNED_INT, (uint32_t *) NULL + first_index, n_instances);
-	//glBindVertexArray (0);
+	if (bind) {
+		glBindVertexArray(0);
+	}
 #ifdef SEHLE_PERFORMANCE_MONITOR
 	va->resource.engine->counter.indices += n_indices;
 	va->resource.engine->counter.indexinstances += n_instances * n_indices;
@@ -228,7 +237,9 @@ sehle_vertex_array_render_lines (SehleVertexArray *va, unsigned int bind, unsign
 		SEHLE_CHECK_ERRORS (0);
 	}
 	glDrawElements (GL_LINES, n_indices, GL_UNSIGNED_INT, (uint32_t *) NULL + first_index);
-	//glBindVertexArray (0);
+	if (bind) {
+		glBindVertexArray(0);
+	}
 #ifdef SEHLE_PERFORMANCE_MONITOR
 	va->resource.engine->counter.geometry_batches += 1;
 #endif

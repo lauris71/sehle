@@ -25,7 +25,7 @@ static void spotl_setup_forward (SehleLightImplementation *impl, SehleLightInsta
 static void spot_light_bind (SehleMaterialImplementation *impl, SehleMaterialInstance *inst, SehleRenderContext *ctx, unsigned int render_type);
 static void spot_light_render (SehleRenderableImplementation *impl, SehleRenderableInstance *inst, SehleRenderContext *ctx, SehleProgram *prog, unsigned int render_type, void *data);
 
-static void spot_light_build_volume (SehleSpotLightInstance *inst, float *vertices, unsigned int stride_floats);
+static void spot_light_build_volume (SehleSpotLightInstance *inst, EleaVec3f *vertices, unsigned int stride_floats);
 
 enum Attributes {
 	VERTEX, NUM_ATTRIBUTES
@@ -74,11 +74,11 @@ spotl_setup_forward (SehleLightImplementation *impl, SehleLightInstance *inst, S
 	elea_mat3x4f_get_col_vec(&z_world, &inst->l2w, 2);
 	z_world = elea_vec3f_inv(z_world);
 	elea_mat3x4f_transform_vec3(&inst->info.dir, &ctx->w2v, &z_world);
-	inst->info.point_attn[0] = inst->point_attenuation[1];
-	inst->info.point_attn[1] = inst->point_attenuation[3];
-	inst->info.spot_attn[0] = inst->spot_attenuation[0] + inst->spot_attenuation[1];
-	inst->info.spot_attn[1] = inst->spot_attenuation[0];
-	inst->info.spot_attn[2] = inst->spot_attenuation[2];
+	inst->info.point_attn[0] = inst->point_attn.radius;
+	inst->info.point_attn[1] = inst->point_attn.falloff;
+	inst->info.spot_attn[0] = inst->spot_attn.inner_cos;
+	inst->info.spot_attn[1] = inst->spot_attn.outer_cos;
+	inst->info.spot_attn[2] = inst->spot_attn.falloff;
 }
 
 static void
@@ -88,15 +88,20 @@ spot_light_bind (SehleMaterialImplementation *impl, SehleMaterialInstance *inst,
 	EleaVec3f l_dir, l_pos;
 	sehle_light_bind_common (&spot->light_inst, ctx);
 
-	elea_mat3x4f_get_translation (&l_pos, &spot->light_inst.l2w);
-	elea_mat3x4f_transform_point (&l_pos, &ctx->w2v, &l_pos);
-	sehle_program_setUniform3fv (inst->programs[0], SEHLE_LIGHT_LIGHTPOS, 1, l_pos.c);
+	/* Light position */
+	EleaVec3f p_world, p_eye;
+	elea_mat3x4f_get_translation(&p_world, &spot->light_inst.l2w);
+	elea_mat3x4f_transform_point(&p_eye, &ctx->w2v, &p_world);
+	EleaVec4f light_pos = {p_eye.x, p_eye.y, p_eye.z, 1};
+	sehle_program_setUniform4fv (inst->programs[0], SEHLE_LIGHT_LIGHTPOS, 1, light_pos.c);
+
 	elea_mat3x4f_get_col_vec (&l_dir, &spot->light_inst.l2w, 2);
 	l_dir = elea_vec3f_inv (l_dir);
 	elea_mat3x4f_transform_vec3 (&l_dir, &ctx->w2v, &l_dir);
 	sehle_program_setUniform3fv (inst->programs[0], SEHLE_LIGHT_LIGHTDIR, 1, l_dir.c);
-	sehle_program_setUniform4fv (inst->programs[0], SEHLE_LIGHT_POINT_ATTENUATION, 1, spot->light_inst.point_attenuation);
-	sehle_program_setUniform3fv (inst->programs[0], SEHLE_LIGHT_SPOT_ATTENUATION, 1, spot->light_inst.spot_attenuation);
+
+	sehle_program_setUniform3fv (inst->programs[0], SEHLE_LIGHT_POINT_ATTENUATION, 1, spot->light_inst.point_attn.c);
+	sehle_program_setUniform3fv (inst->programs[0], SEHLE_LIGHT_SPOT_ATTENUATION, 1, spot->light_inst.spot_attn.c);
 }
 
 static void
@@ -108,7 +113,7 @@ spot_light_render (SehleRenderableImplementation *impl, SehleRenderableInstance 
 	EleaMat3x4f m;
 	EleaMat4x4f m_proj;
 	elea_mat3x4f_multiply (&m, &ctx->w2v, &spot->light_inst.l2w);
-	elea_mat3x4f_scale_self_right_xyz (&m, spot->light_inst.point_attenuation[1], spot->light_inst.point_attenuation[1], spot->light_inst.point_attenuation[1]);
+	//elea_mat3x4f_scale_self_right_xyz (&m, 5, 5, 5);
 	elea_mat4x4f_multiply_mat3x4 (&m_proj, &ctx->proj, &m);
 	sehle_program_setUniformMatrix4fv (spot->light_inst.material_inst.programs[0], SEHLE_LIGHT_L2W_W2V_PROJECTION, 1, m_proj.c);
 	// Same for shadow lookup
@@ -116,7 +121,9 @@ spot_light_render (SehleRenderableImplementation *impl, SehleRenderableInstance 
 	sehle_vertex_array_render_triangles (spot->light_inst.va, 1, 0, spot->light_inst.va->ibuf->buffer.n_elements);
 }
 
-#define N_CORNERS 8
+#define N_CORNERS 20
+#define N_VERTICES (2 * N_CORNERS + 2)
+#define N_INDICES (3 * 4 * N_CORNERS)
 
 void
 sehle_spot_light_setup (SehleSpotLightInstance *inst, SehleEngine *engine, float priority)
@@ -128,66 +135,95 @@ sehle_spot_light_setup (SehleSpotLightInstance *inst, SehleEngine *engine, float
 
 	inst->light_inst.va = sehle_vertex_array_new (engine, NULL);
 	SehleVertexBuffer *vb = sehle_engine_get_vertex_buffer (engine, NULL, SEHLE_BUFFER_STATIC);
-	sehle_vertex_buffer_setup_attrs (vb, N_CORNERS + 2, SEHLE_ATTRIBUTE_VERTEX, 3, -1);
-	sehle_vertex_array_set_vertex_data (inst->light_inst.va, 0, vb);
-	az_object_unref (( AZObject*) vb);
+	sehle_vertex_buffer_setup_attrs (vb, N_VERTICES + 2, SEHLE_ATTRIBUTE_VERTEX, 3, -1);
 	SehleIndexBuffer *ib = sehle_engine_get_index_buffer (engine, NULL, SEHLE_BUFFER_STATIC);
-	sehle_index_buffer_resize (ib, 6 * N_CORNERS);
+	sehle_index_buffer_resize (ib, N_INDICES);
 	unsigned int* indices = sehle_index_buffer_map (ib, SEHLE_BUFFER_WRITE);
 	for (unsigned int i = 0; i < N_CORNERS; i++) {
-		indices[6 * i + 0] = i + 1;
-		indices[6 * i + 1] = (i + 1) % N_CORNERS + 1;
-		indices[6 * i + 2] = 0;
-		indices[6 * i + 3] = (i + 1) % N_CORNERS + 1;
-		indices[6 * i + 4] = i + 1;
-		indices[6 * i + 5] = N_CORNERS;
+		unsigned int *idx = indices + 12 * i;
+		unsigned int n = (i + 1) % N_CORNERS;
+		idx[0] = 0;
+		idx[1] = 1 + n;
+		idx[2] = 1 + i;
+
+		idx[3] = 1 + i;
+		idx[4] = 1 + n;
+		idx[5] = 1 + N_CORNERS + n;
+
+		idx[6] = 1 + i;
+		idx[7] = 1 + N_CORNERS + n;
+		idx[8] = 1 + N_CORNERS + i;
+
+		idx[9] = 1 + N_CORNERS + n;
+		idx[10] = 1 + N_CORNERS + N_CORNERS;
+		idx[11] = 1 + N_CORNERS + i;
 	}
 	sehle_index_buffer_unmap (ib);
 	sehle_vertex_array_set_index_data (inst->light_inst.va, ib);
+	sehle_vertex_array_set_vertex_data (inst->light_inst.va, 0, vb);
+	az_object_unref ((AZObject *) vb);
 	az_object_unref ((AZObject *) ib);
 }
 
 static void
-spot_light_build_volume (SehleSpotLightInstance *inst, float *vertices, unsigned int stride_floats)
+spot_light_build_volume (SehleSpotLightInstance *inst, EleaVec3f *v, unsigned int stride_floats)
 {
-	EleaVec3f v;
-	float radius = inst->light_inst.point_attenuation[1];
-	float cos_beta_2 = inst->light_inst.spot_attenuation[0];
-	if (cos_beta_2 < 0.01f) cos_beta_2 = 0.01f;
-	if (cos_beta_2 > 1) cos_beta_2 = 1;
-	float sin_beta_2 = sqrtf (1 - cos_beta_2 * cos_beta_2);
-	float l1 = radius / cos_beta_2;
-	float l2 = radius * cos_beta_2;
-	float r = radius * sin_beta_2;
-	float alpha_2 = ELEA_M_PI_F / N_CORNERS;
-	float r1 = r / cosf (alpha_2);
-	memcpy(vertices, &EleaVec3f0, 12);
+	float outer_cos = inst->light_inst.spot_attn.outer_cos;
+	float alpha = acosf(outer_cos) * 2;
+	float beta = (float) (2 * M_PI / N_CORNERS);
+	float cos_a_2 = outer_cos;
+	float sin_a_2 = sinf(alpha / 2);
+	float cos_a_4 = cosf(alpha / 4);
+	float tan_a_2 = sin_a_2 / cos_a_2;
+	float cos_b_2 = cosf(beta / 2);
+	float outer_dist = inst->light_inst.point_attn.radius;
+	float inner_dist = inst->light_inst.point_attn.min_dist;
+	float inner_adjusted = inner_dist * cos_a_2;
+
+	unsigned int vidx = 0;
+
+	/* Inner cap */
+	float di = inner_dist;
+	float ri = di * tan_a_2;
+	float ri_p = ri / cos_b_2;
+	v[vidx++] = (EleaVec3f) {0, 0, -di};
 	for (unsigned int i = 0; i < N_CORNERS; i++) {
 		float phi = i * ELEA_M_2PI_F / N_CORNERS;
-		elea_vec3fp_set_xyz (&v, r1 * cosf (phi), r1 * sinf (phi), -l2);
-		memcpy(vertices + (i + 1) * stride_floats, &v, 12);
+		float x = ri_p * cosf(phi);
+		float y = ri_p * sinf(phi);
+		v[vidx++] = (EleaVec3f) {x, y, -di};
 	}
-	elea_vec3fp_set_xyz (&v, 0, 0, -l1);
-	memcpy(vertices + (N_CORNERS + 1) * stride_floats, &v, 12);
+	/* Outer cap */
+	float Dmax = outer_dist;
+	float Dmax_p = Dmax / cos_a_4;
+	float r_o = Dmax_p * sin_a_2;
+	float ro_p = r_o / cos_b_2;
+	float d_o = Dmax_p * cos_a_2;
+	for (unsigned int i = 0; i < N_CORNERS; i++) {
+		float phi = i * ELEA_M_2PI_F / N_CORNERS;
+		float x = ro_p * cosf(phi);
+		float y = ro_p * sinf(phi);
+		v[vidx++] = (EleaVec3f) {x, y, -d_o};
+	}
+	v[vidx++] = (EleaVec3f) {0, 0, -Dmax_p};
 }
 
 void
-sehle_spot_light_set_point_attenuation (SehleSpotLightInstance *inst, float min_distance, float inner_radius, float outer_radius, float power)
+sehle_spot_light_set_point_attenuation (SehleSpotLightInstance *inst, float min_dist, float radius, float falloff)
 {
 	arikkei_return_if_fail (inst != NULL);
-	inst->light_inst.point_attenuation[0] = min_distance;
-	inst->light_inst.point_attenuation[1] = outer_radius;
-	inst->light_inst.point_attenuation[2] = outer_radius - inner_radius;
-	inst->light_inst.point_attenuation[3] = power;
+	inst->light_inst.point_attn.min_dist = min_dist;
+	inst->light_inst.point_attn.radius = radius;
+	inst->light_inst.point_attn.falloff = falloff;
 }
 
 void
-sehle_spot_light_set_spot_attenuation (SehleSpotLightInstance *inst, float inner_angle, float outer_angle, float power)
+sehle_spot_light_set_spot_attenuation (SehleSpotLightInstance *inst, float inner_angle, float outer_angle, float falloff)
 {
 	arikkei_return_if_fail (inst != NULL);
-	inst->light_inst.spot_attenuation[0] = cosf (outer_angle);
-	inst->light_inst.spot_attenuation[1] = cosf (inner_angle) - cosf (outer_angle);
-	inst->light_inst.spot_attenuation[2] = power;
+	inst->light_inst.spot_attn.inner_cos = cosf (inner_angle);
+	inst->light_inst.spot_attn.outer_cos = cosf (outer_angle);
+	inst->light_inst.spot_attn.falloff = falloff;
 }
 
 void
@@ -195,7 +231,7 @@ sehle_spot_light_update_geometry (SehleSpotLightInstance *inst)
 {
 	arikkei_return_if_fail (inst != NULL);
 	float *v = sehle_vertex_buffer_map (inst->light_inst.va->vbufs[0], SEHLE_BUFFER_WRITE);
-	spot_light_build_volume (inst, v, 3);
+	spot_light_build_volume (inst, (EleaVec3f *) v, 3);
 	sehle_vertex_buffer_unmap (inst->light_inst.va->vbufs[0]);
 }
 
@@ -203,9 +239,16 @@ void
 sehle_spot_light_update_visuals(SehleSpotLightInstance *spot)
 {
 	spot->light_inst.renderable_inst.bbox = EleaAABox3fEmpty;
-	EleaVec3f v[N_CORNERS + 2];
-	spot_light_build_volume (spot, v[0].c, 3);
-	for (unsigned int i = 0; i < (N_CORNERS + 2); i++) {
-		elea_aabox3f_grow_p_mat(&spot->light_inst.renderable_inst.bbox, &spot->light_inst.renderable_inst.bbox, &v[i], &spot->light_inst.l2w);
-	}
+	float sin_a_2 = sqrtf(1 - spot->light_inst.spot_attn.outer_cos * spot->light_inst.spot_attn.outer_cos);
+	EleaVec3f p;
+	/* Inner */
+	float r = sin_a_2 * spot->light_inst.point_attn.min_dist;
+	elea_mat3x4f_transform_point_xyz(&p, &spot->light_inst.l2w, 0, 0, -spot->light_inst.point_attn.min_dist);
+	elea_aabox3f_grow_xyz(&spot->light_inst.renderable_inst.bbox, &spot->light_inst.renderable_inst.bbox, p.x - r, p.y - r, p.z - r);
+	elea_aabox3f_grow_xyz(&spot->light_inst.renderable_inst.bbox, &spot->light_inst.renderable_inst.bbox, p.x + r, p.y + r, p.z + r);
+	/* Outer */
+	r = sin_a_2 * spot->light_inst.point_attn.radius;
+	elea_mat3x4f_transform_point_xyz(&p, &spot->light_inst.l2w, 0, 0, -spot->light_inst.point_attn.radius);
+	elea_aabox3f_grow_xyz(&spot->light_inst.renderable_inst.bbox, &spot->light_inst.renderable_inst.bbox, p.x - r, p.y - r, p.z - r);
+	elea_aabox3f_grow_xyz(&spot->light_inst.renderable_inst.bbox, &spot->light_inst.renderable_inst.bbox, p.x + r, p.y + r, p.z + r);
 }
