@@ -27,7 +27,7 @@ sehle_build_geometry (SehleEngine *engine, unsigned int type)
 		if (sehle_resource_get_sate (&vb->buffer.resource) == SEHLE_RESOURCE_STATE_CREATED) {
 			static const float c[] = { 0, 0, 1, 0, 1, 1, 0, 1 };
 			static const unsigned int p[] = { 0, 1, 2, 0, 2, 3 };
-			sehle_vertex_buffer_setup_attrs (vb, 4, SEHLE_ATTRIBUTE_VERTEX, 0, SEHLE_ATTRIBUTE_TEXCOORD, 2, -1);
+			sehle_vertex_buffer_setup_attrs (vb, 4, SEHLE_ATTRIBUTE_VERTEX, 2, SEHLE_ATTRIBUTE_TEXCOORD, 2, -1);
 			float *attribs = (float *) sehle_vertex_buffer_map (vb, SEHLE_BUFFER_WRITE);
 			memcpy (attribs, c, 8 * 4);
 			sehle_vertex_buffer_unmap (vb);
@@ -97,24 +97,36 @@ sehle_build_geometry (SehleEngine *engine, unsigned int type)
 		float *attrs;
 		unsigned int *indices, x, y;
 		static const unsigned int p[] = { 0, 1, 2, 0, 2, 3 };
-		va = sehle_vertex_array_new_from_attrs (engine, NULL, 81, 384, SEHLE_ATTRIBUTE_VERTEX, 3, SEHLE_ATTRIBUTE_TEXCOORD, 2, -1);
+		va = sehle_vertex_array_new_from_attrs (engine, NULL, 81, 384, SEHLE_ATTRIBUTE_VERTEX, 3, SEHLE_ATTRIBUTE_NORMAL, 3, SEHLE_ATTRIBUTE_TEXCOORD, 2, -1);
 		attrs = (float *) sehle_vertex_buffer_map (va->vbufs[0], SEHLE_BUFFER_WRITE);
 		for (y = 0; y <= 8; y++) {
 			for (x = 0; x <= 8; x++) {
-				attrs[2 * (9 * y + x)] = x / 8.0f;
-				attrs[2 * (9 * y + x) + 1] = y / 8.0f;
+				unsigned int idx = 9 * y + x;
+				float *c = attrs + 8 * idx;
+				c[0] = x / 8.0f;
+				c[1] = y / 8.0f;
+				c[2] = 0;
+				c = attrs + 8 * idx + 3;
+				c[0] = 0;
+				c[1] = 0;
+				c[2] = 1;
+				c = attrs + 8 * idx + 6;
+				c[0] = x / 8.0f;
+				c[1] = y / 8.0f;
 			}
 		}
 		sehle_vertex_buffer_unmap (va->vbufs[0]);
 		indices = sehle_index_buffer_map (va->ibuf, SEHLE_BUFFER_WRITE);
 		for (y = 0; y < 8; y++) {
 			for (x = 0; x < 8; x++) {
-				indices[6 * (8 * y + x)] = 9 * y + x;
-				indices[6 * (8 * y + x) + 1] = 9 * y + x + 1;
-				indices[6 * (8 * y + x) + 2] = 9 * (y + 1) + x;
-				indices[6 * (8 * y + x) + 3] = 9 * y + x;
-				indices[6 * (8 * y + x) + 4] = 9 * (y + 1) + x;
-				indices[6 * (8 * y + x) + 5] = 9 * (y + 1) + x + 1;
+				unsigned int idx = 9 * y + x;
+				uint32_t *i = indices + 6 * (8 * y + x);
+				i[0] = idx;
+				i[1] = idx + 1;
+				i[2] = idx + 9 + 1;
+				i[3] = idx;
+				i[4] = idx + 9 + 1;
+				i[5] = idx + 9;
 			}
 		}
 		sehle_index_buffer_unmap (va->ibuf);

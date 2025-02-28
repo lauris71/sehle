@@ -1,12 +1,13 @@
 # Rotating colored cube
 
-- Setting up Sehle engine and RenderContext
-- Creating simple geometry
-- Creating material
+In this tutorial we learn how to:
+
+- Set up Sehle engine and RenderContext
+- Create simple geometry
+- Create material
 - Display and render
 
-But first we have to include a handful of headers from arikkei, elea and sehle libraries. You can,
-of course, skip these for now and add one-by-one as needed.
+But first we have to include a handful of headers from [arikkei](https://github.com/lauris71/arikkei) and [elea](https://github.com/lauris71/elea) as we as from sehle itself. You can, of course, skip these for now and add one-by-one as needed.
 
     #include <arikkei/arikkei-iolib.h>
 
@@ -26,8 +27,8 @@ of course, skip these for now and add one-by-one as needed.
     #include <sehle/vertex-array.h>
     #include <sehle/vertex-buffer.h>
 
-We also need some method to create GL context and provide rendering viewport. In this tutorial we use SDL2 library, but
-any other will do as well.
+We also need to somehow create GL context and provide rendering viewport. In this tutorial we use SDL2 library, but
+any other method should work as well.
 
     #include <SDL2/SDL.h>
 
@@ -68,7 +69,7 @@ Now SDL initialization:
     SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-    SDL_Window *window = SDL_CreateWindow("ShinYa", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL);
+    SDL_Window *window = SDL_CreateWindow("Sehle Tutorial 1", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL);
     if (!window) {
         fprintf(stderr, "SDL_CreateWindow:%s\n", SDL_GetError());
     }
@@ -93,7 +94,7 @@ the whole rendering system. It provides:
 - render state bookkeeping
 
 Starting engine initializes OpenGL and makes the context accessible to sehle resource objects.
-Although most objects can be created while the engine is stopped, the actual graphics data will
+Although most objects can be created while the engine is not running, the actual graphics data will
 not be built before it is started.
 
     SehleEngine *engine = sehle_engine_new();
@@ -103,7 +104,7 @@ not be built before it is started.
         exit(1);
     }
 
-Next we need render target to draw on. In simpler cases it can be viewport target - i.e. the one
+Next we need a render target to draw on. In simpler cases it can be viewport target - i.e. the one
 rendering directly to the screen. RenderTarget is a resource - a heavyweight reference-counted
 object. Other resource types are textures, vertex buffers and shader programs.
 
@@ -128,11 +129,10 @@ If renderables, material system and renderers are not used it is not needed
 
     SehleRenderContext ctx;
     sehle_render_context_setup(&ctx, engine);
-    ctx.global_ambient = EleaColor4fWhite;
     sehle_render_context_set_target (&ctx, tgt);
     sehle_render_context_set_viewport (&ctx, 0, 0, width, height);
 
-Render context is plain block type object and thus has to be managed externally.
+Render context is a plain block type object and thus has to be managed externally. Here we simply allocate it in stack in the main method as we do all rendering here.
 
 Now it is time to create some geometry. First we create vertex and index buffers and map these to CPU memory.
 
@@ -165,6 +165,8 @@ face outwards on inwards.
     EleaVec3f p1 = {1, 1, 1};
     elea_generate_box(vertices, 9 * 4, NULL, 0, vertices + 3, 9 * 4, indices, &p0, &p1, 1);
 
+Our vertex buffer does not contain normals so we specify NULL as normals array location.
+
 The cube generator did not assign colors so we have to do that manually. We just set color channels to
 (normalized) coordinate values for each vertex.
 
@@ -184,7 +186,7 @@ At last we unmap buffers, i.e. tell OpenGL that the data can be moved to video m
     sehle_vertex_buffer_unmap(vbuf);
     sehle_index_buffer_unmap(ibuf);
 
-And attach vertex and index buffers to SehleVertexArray. The latter is simply and container of one or
+And attach vertex and index buffers to SehleVertexArray. The latter is simply an container of one or
 more vertex buffers and one index buffer that simplifies (and speeds up) vertex binding for render calls.
 
     SehleVertexArray *va = sehle_vertex_array_new_from_buffers(engine, (const uint8_t *) "HelloCube", vbuf, ibuf);
@@ -214,29 +216,28 @@ We also attach created vertex array to static mesh and specify it's bounding box
     sehle_static_mesh_set_vertex_array(&mesh, va);
     elea_aabox3f_set_values(&mesh.renderable_inst.bbox, -2, -2, -2, 2, 2, 2);
 
-RenderContext requires material, so we have to set up one. We use the most simple forward-rendered SehleMaterialControl.
-It is intended for gizmos, controls and similar things but for our tutorial it is enough.
-SehleMaterial is actually interface type, but SehleMaterialControl implements it so we do not have to set up the
-implementation ourselves.
+Static mesh requires material, so we have to set up one. Here we use SehleMaterialControl - the most simple forward-rendered material type. It is intended for gizmos, controls and similar things but for the first tutorial this is enough.
+SehleMaterial itself is actually an interface type, but SehleMaterialControl implements it so we do not have to set up the
+implementation ourselves (like SehleStaticMesh implementing SehleRenderale).
 
     SehleMaterialControl mat;
     sehle_material_control_init(&mat, engine);
     sehle_material_control_set_has_colors(&mat, 1);
-    mat.ambient = EleaColor4fWhite;
-    mat.color = EleaColor4fWhite;
 
 Now we add created material to static mesh material slot 0.
 
     sehle_static_mesh_resize_materials(&mesh, 1);
     sehle_static_mesh_set_material(&mesh, 0, SEHLE_MATERIAL_CONTROL_MATERIAL_IMPLEMENTATION, &mat.material_inst);
 
-Single static mesh can have multile fragments with multiple materials, LOD levels and so on. We just create single fragment,
+Single static mesh can have multile fragments with different materials and LOD levels. Here we just create a single fragment,
 assign all indices to it and set it's material index to 0.
 
     sehle_static_mesh_resize_fragments(&mesh, 1);
     mesh.frags[0].first = 0;
     mesh.frags[0].n_indices = va->ibuf->buffer.n_elements;
     mesh.frags[0].mat_idx = 0;
+
+With that our object-to-be-rendered is ready.
 
 Now set up view matrices in SehleRenderContexxt.
 
@@ -248,7 +249,7 @@ Now set up view matrices in SehleRenderContexxt.
     /* Update view parameters in render context  */
     sehle_render_context_set_view (&ctx, &v2w, &proj);
 
-Now start the main rendering loop
+And finally start the main rendering loop
 
     double start = arikkei_get_time();
     double time;
@@ -281,7 +282,7 @@ Now start the main rendering loop
                         height = evt.window.data2;
                         SDL_SetWindowSize(window, width, height);
 
-Resize the render target to match window. This is only needed for proper framebuffers (not window taget) but we keep it here
+Resize the render target to match window. This is only needed for proper framebuffers (not viewport target) but we keep it here
 
                         sehle_render_target_resize(tgt, width, height);
 
@@ -315,17 +316,20 @@ Clear frame to uniform color.
         EleaColor4f bg = {0.32f, 0.3f, 0.27f};
         sehle_render_context_clear (&ctx, 1, 1, &bg);
 
-Display all our renderables. This calls *display* virtual method of renderables, submitting geometry for subsequent render calls.
+Next display all our renderables. This calls *display* virtual method of renderables, submitting geometry for subsequent render calls.
 
-Display uses the concept of render stages. A stage one semantic part of multi-pass rendering (e.g. STAGE_SOLID, STAGE_TRANSPARENT,
-STAGE_LIGHTING). Here we use forward stage.
+Display uses the concept of render stages. A stage is one semantic part of multi-pass rendering (e.g. STAGE_SOLID, STAGE_TRANSPARENT, STAGE_LIGHTING). Here we use forward stage. We will also specify the layers to be processed.
+
+Please note that passing our SehleStaticMesh to display method is actually done by two parameters - an implementation (SEHLE_STATIC_MESH_RENDERABLE_IMPLEMENTATION) and instance (&mesh.renderable_inst). This is how polymorphism in AZ type
+system works - every type instance that is neither final nor object has to be accompanied by corresponding implementation.
 
         sehle_render_context_display_frame(&ctx, SEHLE_STATIC_MESH_RENDERABLE_IMPLEMENTATION, &mesh.renderable_inst, 1, SEHLE_STAGE_FORWARD | SEHLE_STAGE_SOLID);
 
-Render everything that was submitted in display pass. This calls the *render* virtual method of renderables, sending submitted
-data to OpenGL engine.
+Next render everything that was submitted in display pass. This, for each submitted renderable, calls the *bind* virtual method of material and then the *render* virtual method of renderable, finally sending submitted data to OpenGL engine.
 
-Render uses both display stage and render type. Render type defines, which parts and properties of renderale are relevant and how they should be handles (e.g. RENDER_DEPTH, RENDER_DENSITY, RENDER_AMBIENT). Here we use RENDER_FORWARD type.
+Render uses both display stage and render type. Render type defines, which parts and properties of the renderable are relevant and how they should be handles (e.g. RENDER_DEPTH, RENDER_DENSITY, RENDER_AMBIENT). Here we use RENDER_FORWARD type.
+
+It also allow one to skip materials by type.
 
         sehle_render_context_render (&ctx, SEHLE_STAGE_FORWARD, SEHLE_RENDER_FORWARD, 1, 0);
 
@@ -336,7 +340,7 @@ Clean up RenderContext (free list etc.).
         SDL_GL_SwapWindow(window);
     }
 
-When we finish it is good idea to delete engine.
+When we finish it is good idea to delete the engine.
 
     sehle_engine_delete(engine);
 

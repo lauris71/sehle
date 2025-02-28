@@ -2,68 +2,81 @@
 An OpenGL graphics library written in C
 
 ## Overview
-This an object-oriented graphics library on top of OpenGL, built in C.
-- It uses AZ RTTI and reflection system
+Sehle is an object-oriented graphics library on top of OpenGL, built in C.
+- Uses AZ type system
 - A bit lower level than scene graph/game libraries
 - Designed as drop-in static library
 
 ## Building
-You need arikkei, az (for RTT) and elea (for 3D math) libraries. Just clone [arikkei](https://github.com/lauris71/arikkei), [az](https://github.com/lauris71/az) and [elea](https://github.com/lauris71/elea) to an accessible place (either to the root of the main project or elea).
-Then, in the az project directory execute:
+You need arikkei, az (for type system) and elea (for 3D math) libraries.
+The simplest way is to clone [arikkei](https://github.com/lauris71/arikkei), [az](https://github.com/lauris71/az) and [elea](https://github.com/lauris71/elea) to the root of sehle directory.
+
+    git clone git@github.com:lauris71/sehle.git
+    cd sehle
+    git clone git@github.com:lauris71/arikkei.git
+    git clone git@github.com:lauris71/az.git
+    git clone git@github.com:lauris71/elea.git
+
+Then, in the same sehle project directory execute:
 
     cmake -S . -B build
     cmake --build build
 
-The provided makefiles builds static library.
+The provided makefiles build static library.
+
+For the idea how it works check out the tutorials subdirectory.
 
 ## Design principles
-It is meant as an intermediate layer between the raw graphics API (OpenGL) and higher-level graphical library (scene graph, game engine). Due to that the most sehle datatypes are not very convenient to manage and should be embedded in higher-level objects instead.
+Sehle is meant as an intermediate layer between the raw graphics API (OpenGL) and higher-level library (scene graph, game engine). Thus most sehle datatypes are not very convenient to manage directly and should be embedded in higher-level objects instead.
 
 ### Engine
-This is an all-round manager of the overall system
+This is an all-round manager of the underlying rendering system
 
 ### Resources
-These are mostly wrappers around OpenGL resources
+These are just wrappers around OpenGL resources
 - textures
 - programs
 - vertex and index buffers
 - render targets
 
-These are implemented as AZObjects, i.e. self-contained, reference-counted types. In addition, the engine manages a lookup system for discovering resources to avoid replication.
+Resources are AZObjects - i.e. self-contained, reference-counted types. In addition the engine manages a lookup and cache system to avoid resource replication.
 
 ### Renderables
-Types that schedule rendering calls. All visible things, including lights, are derived from abstract SehleRenderable.
+Renderables are types that can schedule rendering calls. All visible things, including lights, are derived from abstract SehleRenderable superclass.
 
-SehleRenderable is an AZInterface subclass. Thus the memory management and implementation has to be provided by user code. Normally one should implement a renderable interface(s) inside a high-level graphical object.
+SehleRenderable is an interface type. Thus the memory management and implementation has to be provided by user code. Normally one should implement a renderable interface(s) inside a high-level graphical object.
 
 The library provides few convenience objects that wrap SehleRenderable interfaces:
 - Lights
 - StaticMesh
+- RenderableList
 
-These are bare AZ block types and thus need external memory mamagement.
+These types are bare AZ block types and thus need external memory mamagement.
 
 ### Materials
 Materials manage binding of programs to renderables during render calls.
 
-SehleMaterial is an AZInterface subclass. Thus the memory management and implementation has to be provided by user code. 
+SehleMaterial is an interface type. Thus the memory management and implementation has to be provided by user code. 
 
 The library provdes some convenience material objects that implement material interfaces:
 - Lights
 - DNS (Diffuse/Normal/Specular) material
 - ControlMaterial - a simple single-texture forward-rendered material
 
-These are bare AZ block types and thus need external memory mamagement.
+These types are bare AZ block types and thus need external memory mamagement.
 
 ### Render context
-This holds temporary and high-level data about scene, such as:
-- render state
+Render context holds temporary low and high-level data about scene, such as:
+- OpenGL state
 - render target(s)
 - render lists
-- camera materixes
+- camera matrixes
+
+It is bare AZ block type with pretty lightweight constructors and destructors, thus readily buildable in stack.
 
 ### Renderers
-These are high-level mini-engines that perform specific complex rendering operations:
-- scene renderer
+Renderers are high-level mini-engines that perform specific complex rendering operations:
+- Scene renderer
 - MSAA renderer
 - UI renderer
 - Sky renderer

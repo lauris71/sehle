@@ -59,7 +59,7 @@ main(int argc, const char **argv)
     SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-    SDL_Window *window = SDL_CreateWindow("ShinYa", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL);
+    SDL_Window *window = SDL_CreateWindow("Sehle Tutorial 1", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL);
     if (!window) {
         fprintf(stderr, "SDL_CreateWindow:%s\n", SDL_GetError());
     }
@@ -100,7 +100,6 @@ main(int argc, const char **argv)
      */
     SehleRenderContext ctx;
     sehle_render_context_setup(&ctx, engine);
-    ctx.global_ambient = EleaColor4fWhite;
     sehle_render_context_set_target (&ctx, tgt);
     sehle_render_context_set_viewport (&ctx, 0, 0, width, height);
     
@@ -163,8 +162,6 @@ main(int argc, const char **argv)
     SehleMaterialControl mat;
     sehle_material_control_init(&mat, engine);
     sehle_material_control_set_has_colors(&mat, 1);
-    mat.ambient = EleaColor4fWhite;
-    mat.color = EleaColor4fWhite;
 
     /* Add material slot to static mesh and set material */
     sehle_static_mesh_resize_materials(&mesh, 1);
