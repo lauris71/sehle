@@ -17,8 +17,7 @@ set(SHADER_FILES
     lightvolume-fragment.txt
     occlusion-fragment.txt
     occlusion-vertex.txt
-    overlay-fragment.txt
-    overlay-vertex.txt
+    overlay-vertex.glsl overlay-fragment.glsl
     particles-fragment.txt
     particles-vertex.txt
     plain-fragment.txt

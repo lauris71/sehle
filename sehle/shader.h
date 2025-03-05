@@ -57,7 +57,7 @@ void sehle_shader_build_from_data (SehleShader *shader, const unsigned char *cda
 /* Fetch existing or build new */
 SehleShader *sehle_shader_fetch_from_file (SehleEngine *engine, const char *filename, unsigned int type);
 
-const unsigned char *sehle_shader_map (const unsigned char *key, unsigned int *size, unsigned int *is_file);
+const uint8_t *sehle_shader_map (const uint8_t *key, unsigned int *size, unsigned int *is_mmap);
 
 #ifdef __cplusplus
 };

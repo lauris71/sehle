@@ -34,6 +34,10 @@ static void shader_build (SehleResource *res);
 
 static void sehle_shader_clear (SehleShader *shader);
 
+static const uint8_t *default_paths[] = {(const uint8_t *) "."};
+static const uint8_t **paths = default_paths;
+unsigned int n_paths = 1;
+
 unsigned int
 sehle_shader_get_type (void)
 {
@@ -203,32 +207,27 @@ sehle_shader_fetch_from_file (SehleEngine *engine, const char *filename, unsigne
 	return shader;
 }
 
-const unsigned char *
-sehle_shader_map (const unsigned char *key, unsigned int *size, unsigned int *is_file)
+const uint8_t *
+sehle_shader_map (const uint8_t *key, unsigned int *size, unsigned int *is_map)
 {
 	const unsigned char *cdata = NULL;
-#ifdef _DEBUG
-	uint64_t csize;
-	char c[1024];
-	if (strlen ((const char *) key) > 960) return NULL;
-	sprintf (c, "sehle/%s", key);
-	cdata = arikkei_mmap ((const unsigned char *) c, &csize);
-	if (!cdata) {
-		sprintf (c, "C:/src/Escher/sehle/shaders/%s", key);
-		cdata = arikkei_mmap ((const unsigned char *) c, &csize, NULL);
+	for (unsigned int i = 0; i < n_paths; i++) {
+		const uint8_t *srcs[] = {paths[i], key};
+		const int64_t lens[] = {-1, -1};
+		uint8_t *path = arikkei_strdup_join(srcs, 2, lens, (const uint8_t *) "/", -1);
+		uint64_t msize;
+		cdata = arikkei_mmap(path, &msize);
+		if (cdata) {
+			if (size) *size = (unsigned int) msize;
+			if(is_map) *is_map = 1;
+			return cdata;
+		}
 	}
-	if (cdata) {
-		if (size) *size = (int) csize;
-		if (is_file) *is_file = 1;
-		return cdata;
-	}
-#endif
 	cdata = sehle_get_map (key, size);
 	if (!cdata) {
 		fprintf (stderr, "sehle_shader_map: Cannot map file %s\n", key);
-		if (size) *size = 0;
 	}
-	if (is_file) *is_file = 0;
+	if (is_map) *is_map = 0;
 	return cdata;
 }
 

@@ -1,5 +1,7 @@
 # Simple lighting
 
+![Screenshot](./Sehle_tutorial_2.png)
+
 In this tutorial we learn how to:
 
 - Set up RenderableList

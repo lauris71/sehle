@@ -79,13 +79,13 @@ extern const char occlusion_vertex_txt_0_data[];
 extern unsigned int occlusion_vertex_txt_0_size;
 extern uint64_t occlusion_vertex_txt_size;
 
-extern const char overlay_fragment_txt_0_data[];
-extern unsigned int overlay_fragment_txt_0_size;
-extern uint64_t overlay_fragment_txt_size;
+extern const char overlay_vertex_glsl_0_data[];
+extern unsigned int overlay_vertex_glsl_0_size;
+extern uint64_t overlay_vertex_glsl_size;
 
-extern const char overlay_vertex_txt_0_data[];
-extern unsigned int overlay_vertex_txt_0_size;
-extern uint64_t overlay_vertex_txt_size;
+extern const char overlay_fragment_glsl_0_data[];
+extern unsigned int overlay_fragment_glsl_0_size;
+extern uint64_t overlay_fragment_glsl_size;
 
 extern const char particles_fragment_txt_0_data[];
 extern unsigned int particles_fragment_txt_0_size;

@@ -23,7 +23,7 @@
 #include <sehle/light-point.h>
 #include <sehle/material-control.h>
 #include <sehle/material-dns.h>
-#include <sehle/material-overlay.h>
+#include <sehle/program-overlay.h>
 #include <sehle/program.h>
 #include <sehle/render-context.h>
 #include <sehle/render-target-deferred.h>
@@ -45,6 +45,8 @@ static SDL_GLContext gl_context;
 static int width = 800;
 static int height = 600;
 
+#define LAYER_SCENE 1
+
 typedef struct _HelloShape HelloShape;
 
 enum {
@@ -58,7 +60,8 @@ struct _HelloShape {
 };
 
 static void
-create_shape(HelloShape *shape, SehleEngine *engine, unsigned int type, int dir)
+create_shape(HelloShape *shape, SehleEngine *engine, unsigned int type, int dir,
+    SehleMaterialImplementation *mat_impl, SehleMaterialInstance *mat_inst)
 {
     unsigned int n_vertices, n_indices;
     if (type == CUBE) {
@@ -99,14 +102,8 @@ create_shape(HelloShape *shape, SehleEngine *engine, unsigned int type, int dir)
     sehle_static_mesh_set_vertex_array(&shape->mesh, va);
     shape->mesh.renderable_inst.bbox = EleaAABox3fInfinite;
 
-    SehleMaterialControl *mat = sehle_material_control_new(engine);
-    sehle_material_control_set_has_colors(mat, 1);
-    mat->ambient = EleaColor4fWhite;
-    mat->color = EleaColor4fWhite;
-    SehleMaterialImplementation *mat_impl = SEHLE_MATERIAL_CONTROL_MATERIAL_IMPLEMENTATION;
-
     sehle_static_mesh_resize_materials(&shape->mesh, 1);
-    sehle_static_mesh_set_material(&shape->mesh, 0, mat_impl, &mat->material_inst);
+    sehle_static_mesh_set_material(&shape->mesh, 0, mat_impl, mat_inst);
 
     sehle_static_mesh_resize_fragments(&shape->mesh, 1);
     shape->mesh.frags[0].first = 0;
@@ -142,14 +139,14 @@ create_point(HelloPoint *point, SehleEngine *engine, EleaColor4f color, EleaVec3
     point->pos = pos;
     point->speed = EleaVec3f0;
     point->acc = EleaVec3f0;
-    point->bbox = (EleaAABox3f) {-10, -10, -1.8f, 10, 10, 0};
+    point->bbox = (EleaAABox3f) {-10, -10, 1.5f, 10, 10, 3};
 
     az_implementation_init((AZImplementation *) &point->point_impl, SEHLE_TYPE_POINT_LIGHT);
     az_interface_init((AZImplementation *) &point->point_impl, &point->point_inst);
     sehle_point_light_setup(&point->point_inst, engine, 0);
     point->point_inst.light_inst.ambient = EleaColor4fBlack;
     point->point_inst.light_inst.diffuse = color;
-    sehle_point_light_set_point_attenuation (&point->point_inst, 0.1f, 3.0f, 1);
+    sehle_point_light_set_point_attenuation (&point->point_inst, 0, 4.0f, 2);
     sehle_point_light_update_visuals(&point->point_inst);
 
     elea_mat3x4f_set_translate(&point->point_inst.light_inst.l2w, &point->pos);
@@ -267,47 +264,26 @@ spot_animate(HelloSpot *spot, double time)
 }
 
 /*
- * A helper function to create 20x20m ground platform
+ * A helper function to create 10x10m ground platform
  */
 
 static void
 create_platform(SehleStaticMesh *mesh, SehleEngine *engine)
 {
-    SehleVertexBuffer *vbuf = sehle_vertex_buffer_new(engine, "Platform", SEHLE_BUFFER_STATIC);
-    sehle_vertex_buffer_setup_attrs(vbuf, 24, SEHLE_ATTRIBUTE_VERTEX, 3, SEHLE_ATTRIBUTE_NORMAL, 3, SEHLE_ATTRIBUTE_TEXCOORD0, 2, -1);
-    SehleIndexBuffer *ibuf = sehle_index_buffer_new(engine, "Platform", SEHLE_BUFFER_STATIC);
-    sehle_index_buffer_resize(ibuf, 36);
-    float *vertices = sehle_vertex_buffer_map(vbuf, SEHLE_BUFFER_WRITE);
-    uint32_t *indices = sehle_index_buffer_map(ibuf, SEHLE_BUFFER_WRITE);
-    /*
-     * Generate unit cube using Elea
-     */
-    EleaVec3f p0 = {-10, -10, -2.1};
-    EleaVec3f p1 = {10, 10, -2};
-    elea_generate_box(vertices, 8 * 4, vertices + 3, 8 * 4, vertices + 6, 8 * 4, indices, &p0, &p1, 1);
-    sehle_vertex_buffer_unmap(vbuf);
-    sehle_index_buffer_unmap(ibuf);
-    /* Assign created buffers to vertex array */
-    SehleVertexArray *va = sehle_vertex_array_new_from_buffers(engine, (const uint8_t *) "Platform", vbuf, ibuf);
-
     az_instance_init(mesh, SEHLE_TYPE_STATIC_MESH);
-    /* Bind static mesh to engine and set render layers */
-    sehle_static_mesh_setup(mesh, engine, 1);
-    /* Set up static mesh geometry and bounding box */
+    sehle_static_mesh_setup(mesh, engine, LAYER_SCENE);
+    /* Use pre-built flat rectangle as geometry */
+    SehleVertexArray *va = sehle_engine_get_standard_geometry(engine, SEHLE_GEOMETRY_GRID_8x8);
     sehle_static_mesh_set_vertex_array(mesh, va);
-    elea_aabox3f_grow_p(&mesh->renderable_inst.bbox, &mesh->renderable_inst.bbox, &p0);
-    elea_aabox3f_grow_p(&mesh->renderable_inst.bbox, &mesh->renderable_inst.bbox, &p1);
 
+    /* Create material with lighting */
     SehlematerialDNS *mat = sehle_material_dns_new(engine);
     sehle_material_dns_set_has_colors(mat, 0);
     sehle_material_dns_set_transparent(mat, 0, 0);
-    SehleTexture2D *tex = sehle_engine_get_standard_texture(engine, SEHLE_TEXTURE_WHITE);
-    sehle_material_dns_set_texture(mat, SEHLE_MATERIAL_DNS_MAP_DIFFUSE, tex);
-    SehleMaterialImplementation *mat_impl = SEHLE_MATERIAL_DNS_MATERIAL_IMPLEMENTATION;
 
     /* Add material slot to static mesh and set material */
     sehle_static_mesh_resize_materials(mesh, 1);
-    sehle_static_mesh_set_material(mesh, 0, mat_impl, &mat->material_inst);
+    sehle_static_mesh_set_material(mesh, 0, SEHLE_MATERIAL_DNS_MATERIAL_IMPLEMENTATION, &mat->material_inst);
     /*
      * Set up static mesh fragment
      * Fragments are simply parts of mesh with different slice of index buffer and material
@@ -317,6 +293,12 @@ create_platform(SehleStaticMesh *mesh, SehleEngine *engine)
     mesh->frags[0].first = 0;
     mesh->frags[0].n_indices = va->ibuf->buffer.n_elements;
     mesh->frags[0].mat_idx = 0;
+
+    EleaMat3x4f m;
+    elea_mat3x4f_set_scale_xyz(&m, 20, 20, 20);
+    elea_mat3x4f_translate_left_xyz(&mesh->r2w, &m, -10, -10, 0);
+
+    elea_aabox3f_set_values(&mesh->renderable_inst.bbox, -10, -10, 0, 10, 10, 0);
 }
 
 static void
@@ -364,54 +346,6 @@ setup_sdl()
     SDL_GL_GetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, &minor);
     fprintf(stderr, "OpenGL version %d.%d\n", major, minor);
     SDL_GL_SetSwapInterval(0);
-}
-
-static SehleVertexArray *
-create_colored_cube_va(SehleEngine *engine)
-{
-    /*
-     * Create geometry
-     *
-     * First we create vertex and index buffers and map these to CPU memory
-     * 
-     * Vertex buffer has the following layout:
-     *   Vertex: 3 floats
-     *   Normal: 3 floats
-     *   TexCoord: 2 floats
-     *   Color: 4 floats
-     */
-    SehleVertexBuffer *vbuf = sehle_vertex_buffer_new(engine, "HelloCube", SEHLE_BUFFER_STATIC);
-    sehle_vertex_buffer_setup_attrs(vbuf, 24, SEHLE_ATTRIBUTE_VERTEX, 3, SEHLE_ATTRIBUTE_NORMAL, 3, SEHLE_ATTRIBUTE_TEXCOORD0, 2, SEHLE_ATTRIBUTE_COLOR, 4, -1);
-    SehleIndexBuffer *ibuf = sehle_index_buffer_new(engine, "HelloCube", SEHLE_BUFFER_STATIC);
-    sehle_index_buffer_resize(ibuf, 36);
-    float *vertices = sehle_vertex_buffer_map(vbuf, SEHLE_BUFFER_WRITE);
-    uint32_t *indices = sehle_index_buffer_map(ibuf, SEHLE_BUFFER_WRITE);
-    //for (int i = 0; i < 36; i++) indices[i] = i / 2;
-    /*
-     * Generate unit cube using Elea
-     */
-    EleaVec3f p0 = {-1, -1, -1};
-    EleaVec3f p1 = {1, 1, 1};
-    elea_generate_box(vertices, 12 * 4, vertices + 3, 12 * 4, vertices + 6, 12 * 4, indices, &p0, &p1, -1);
-    //elea_generate_box(vertices, 12 * 4, vertices + 3, 12 * 4, vertices + 6, 12 * 4, NULL, &p0, &p1, -1);
-    /*
-     * The cube generator did not assign colors so we have to do that manually
-     */
-    for (int i = 0; i < 24; i++) {
-        float *v = vertices + 12 * i;
-        float x = v[0];
-        float y = v[1];
-        float z = v[2];
-        v[8 + 0] = (z + 1) / 2;
-        v[8 + 1] = (y + 1) / 2;
-        v[8 + 2] = (x + 1) / 2;
-        v[8 + 3]  = 1;
-    }
-    sehle_vertex_buffer_unmap(vbuf);
-    sehle_index_buffer_unmap(ibuf);
-    /* Assign created buffers to vertex array */
-    SehleVertexArray *va = sehle_vertex_array_new_from_buffers(engine, (const uint8_t *) "HelloCube", vbuf, ibuf);
-    return va;
 }
 
 int
@@ -477,15 +411,22 @@ main(int argc, const char **argv)
     va = sehle_engine_get_standard_geometry(engine, SEHLE_GEOMETRY_UNIT_CUBE_INSIDE);
     sehle_vertex_array_bind(va);
 #endif
-    HelloShape shapes[16];
-    for (int y = 0; y < 4; y++) {
-        for (int x = 0; x < 4; x++) {
-            unsigned int s = ((x + y) & 1) ? CUBE : SPHERE;
-            int dir = ((x + y) & 2) ? 1 : -1;
-            create_shape(&shapes[4 * y + x], engine, s, dir);
-            update_shape(&shapes[4 * y + x], (EleaVec3f) {2 * x - 3, 2 * y - 3, 0}, 0);
-            sehle_renderable_list_add_child(&list, SEHLE_STATIC_MESH_RENDERABLE_IMPLEMENTATION, &shapes[4 * y + x].mesh.renderable_inst);
-        }
+
+    SehlematerialDNS shape_mat;
+    az_instance_init(&shape_mat, SEHLE_TYPE_MATERIAL_DNS);
+    sehle_material_dns_set_has_colors(&shape_mat, 0);
+    sehle_material_dns_set_transparent(&shape_mat, 0, 0);
+
+#define N_SHAPES 25
+    HelloShape shapes[N_SHAPES];
+    for (int i = 0; i < N_SHAPES; i++) {
+        float x = (float) ((double) rand() / RAND_MAX);
+        float y = (float) ((double) rand() / RAND_MAX);
+        unsigned int s = (rand() > (RAND_MAX / 2)) ? CUBE : SPHERE;
+        create_shape(&shapes[i], engine, s, 1,
+            SEHLE_MATERIAL_DNS_MATERIAL_IMPLEMENTATION, &shape_mat.material_inst);
+        update_shape(&shapes[i], (EleaVec3f) {18 * x - 9, 18 * y - 9, 0}, 0);
+        sehle_renderable_list_add_child(&list, SEHLE_STATIC_MESH_RENDERABLE_IMPLEMENTATION, &shapes[i].mesh.renderable_inst);
     }
 
     /* Create plafrom with helper function */
@@ -535,10 +476,12 @@ main(int argc, const char **argv)
 
     HelloPoint point[N_POINTS];
     for (int i = 0; i < N_POINTS; i++) {
+        float x = (float) ((double) rand() / RAND_MAX);
+        float y = (float) ((double) rand() / RAND_MAX);
         float h = (float) (rand() / (RAND_MAX + 1.0));
         EleaColor4f color;
         elea_color4fp_set_hsv(&color, h, 1.0f, 1.0f, 1.0f);
-        create_point(&point[i], engine, color, (EleaVec3f) {i % 10, i / 10, 0});
+        create_point(&point[i], engine, color, (EleaVec3f) {x * 20 - 10, y * 20 - 10, 2});
         sehle_renderable_list_add_child(&list, &point[i].point_impl.light_impl.renderable_impl, &point[i].point_inst.light_inst.renderable_inst);
     }
 #if 0
@@ -556,13 +499,17 @@ main(int argc, const char **argv)
     /*
      * Set up view and projection matrices
      */
-    EleaVec3f viewpoint = {2, 20, 10};
+    EleaVec3f viewpoint = {0, 16, 16};
+    EleaVec3f target = {0, 3, 0};
     EleaMat3x4f v2w;
-    elea_mat3x4f_set_look_at(&v2w, &viewpoint, &EleaVec3f0, &EleaVec3fZ);
+    elea_mat3x4f_set_look_at(&v2w, &viewpoint, &target, &EleaVec3fZ);
     EleaMat4x4f proj;
     elea_mat4x4f_set_frustum_fov(&proj, 1.0f, (float) width / height, 1.0f, 100.0f);
     /* Update view parameters in render context  */
     sehle_render_context_set_view (&ctx, &v2w, &proj);
+
+    /* Get program for direct texture transfer */
+    SehleProgram *prog_overlay = sehle_program_overlay_get_reference (engine, SEHLE_PROGRAM_OVERLAY_HAS_TEXTURE, 0);
 
     /*
      * Bind render context - i.e. ensure that the engine state matches that of context
@@ -671,7 +618,7 @@ main(int argc, const char **argv)
         sehle_render_context_set_viewport (&ctx, 0, 0, width, height);
         sehle_render_context_bind(&ctx);
         /* Clear colors, keep depth */
-        EleaColor4f bg = elea_color4f_div(EleaColor4fBlue, 4);
+        EleaColor4f bg = elea_color4f_div(EleaColor4fBlack, 4);
         sehle_render_context_clear (&ctx, 0, 1, &bg);
 #if 0
         sehle_render_context_display_frame (&ctx, SEHLE_RENDERABLE_LIST_RENDERABLE_IMPLEMENTATION, &list.collection_inst.renderable_inst,
@@ -706,22 +653,14 @@ main(int argc, const char **argv)
 #if 1
         sehle_render_context_set_target (&ctx, tgt_viewport);
         sehle_render_context_set_viewport (&ctx, 0, 0, width, height);
-        sehle_render_context_clear (&ctx, 1, 1, &EleaColor4fRed);
-        static SehleProgram *prog_gamma = NULL;
-		if (!prog_gamma) {
-			prog_gamma = sehle_program_overlay_get_reference (engine, SEHLE_PROGRAM_OVERLAY_HAS_TEXTURE /*| SEHLE_PROGRAM_OVERLAY_HAS_EXPOSURE */, 0);
-		}
-		sehle_render_context_set_program (&ctx, prog_gamma);
+        //sehle_render_context_clear (&ctx, 1, 1, &EleaColor4fRed);
+		sehle_render_context_set_program (&ctx, prog_overlay);
 		ctx.render_state.flags = SEHLE_RENDER_STATE_DEFAULT;
 		sehle_render_flags_clear (&ctx.render_state.flags, SEHLE_DEPTH_TEST | SEHLE_DEPTH_WRITE);
-		sehle_render_flags_set (&ctx.render_state.flags, SEHLE_BLEND);
+		sehle_render_flags_clear (&ctx.render_state.flags, SEHLE_BLEND);
 		sehle_render_context_set_texture_to_channel (&ctx, (SehleTexture *) tgt_fbuf->texcolor, 0);
-		//sehle_render_context_set_texture_to_channel (&ctx, (SehleTexture *) tgt_gbuf->tex[SEHLE_RENDER_TARGET_TEXTURE_DEPTH], 0);
 		sehle_render_context_bind (&ctx);
-		sehle_program_setUniform1i (prog_gamma, SEHLE_PROGRAM_OVERLAY_TEXTURE, 0);
-		sehle_program_setUniform4fv (prog_gamma, SEHLE_PROGRAM_OVERLAY_PRIMARY, 1, EleaColor4fWhite.c);
-		sehle_program_setUniform1f (prog_gamma, SEHLE_PROGRAM_OVERLAY_LWMAX, 1.0f);
-		sehle_program_setUniform1f (prog_gamma, SEHLE_PROGRAM_OVERLAY_GAMMA, 1 / 2.2f);
+		sehle_program_setUniform1i (prog_overlay, SEHLE_PROGRAM_OVERLAY_TEXTURE, 0);
 
 		sehle_render_context_draw_overlay_rect_2d (&ctx, 0, 0, width, height, 0, 0, 1, 1);
 #endif

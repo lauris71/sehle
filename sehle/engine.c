@@ -32,7 +32,7 @@ static const int debug = 0;
 #include "vertex-buffer.h"
 #include "index-buffer.h"
 #include "render-target.h"
-#include "material-overlay.h"
+#include "program-overlay.h"
 #include "material-control.h"
 
 SehleVertexArray *sehle_build_geometry(SehleEngine *engine, unsigned int type);

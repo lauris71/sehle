@@ -26,7 +26,7 @@ static const int debug = 0;
 #include "light.h"
 #include "texture-2d.h"
 #include <sehle/material-depth.h>
-#include "material-overlay.h"
+#include "program-overlay.h"
 #include "material-control.h"
 #include "program.h"
 #include <sehle/render-target.h>

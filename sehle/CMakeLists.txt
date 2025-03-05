@@ -39,7 +39,6 @@ ADD_LIBRARY(sehle STATIC
 	material-depth.c material-depth.h
 	material-dns.c material-dns.h
 	material-foliage.c material-foliage.h
-	material-overlay.c material-overlay.h
 	material-reflecting.c material-reflecting.h
 	material-terrain.c material-terrain.h
 	material-water.c material-water.h
@@ -47,6 +46,7 @@ ADD_LIBRARY(sehle STATIC
 	octree.c octree.h
 	particle-renderer.c particle-renderer.h
 	program-occlusion.c program-occlusion.h
+	program-overlay.c program-overlay.h
 	program.c program.h
 	render-context.c render-context.h
 	render-state.c render-state.h

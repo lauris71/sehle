@@ -55,6 +55,14 @@ target_link_libraries(hello4
     ${LIBS}
 )
 
+ADD_EXECUTABLE(fire
+    fire.c
+)
+
+target_link_libraries(fire
+    ${LIBS}
+)
+
 include_directories(
     ${CMAKE_SOURCE_DIR}/arikkei
     ${CMAKE_SOURCE_DIR}/az

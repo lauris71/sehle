@@ -1,5 +1,7 @@
 # Rotating colored cube
 
+![Screenshot](./Sehle_tutorial_1.png)
+
 In this tutorial we learn how to:
 
 - Set up Sehle engine and RenderContext

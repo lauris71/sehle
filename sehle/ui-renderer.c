@@ -11,7 +11,7 @@
 
 #include <sehle/engine.h>
 #include <sehle/index-buffer.h>
-#include <sehle/material-overlay.h>
+#include <sehle/program-overlay.h>
 #include <sehle/program.h>
 #include <sehle/render-target.h>
 #include <sehle/texture-2d.h>
