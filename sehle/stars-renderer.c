@@ -77,7 +77,7 @@ unsigned int
 sehle_stars_renderer_get_type (void)
 {
 	if (!sehle_stars_renderer_type) {
-		az_register_type (&sehle_stars_renderer_type, (const unsigned char *) "SehleStarsRenderer", AZ_TYPE_BLOCK, sizeof (SehleStarsRendererClass), sizeof (SehleStarsRenderer), AZ_CLASS_ZERO_MEMORY,
+		az_register_type (&sehle_stars_renderer_type, (const unsigned char *) "SehleStarsRenderer", AZ_TYPE_BLOCK, sizeof (SehleStarsRendererClass), sizeof (SehleStarsRenderer), AZ_FLAG_ZERO_MEMORY,
 			(void (*) (AZClass *)) stars_class_init,
 			(void (*) (const AZImplementation *, void *)) stars_init,
 			NULL);

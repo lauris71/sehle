@@ -91,7 +91,7 @@ unsigned int
 sehle_material_terrain_get_type (void)
 {
 	if (!sehle_material_terrain_type) {
-		az_register_type (&sehle_material_terrain_type, (const unsigned char *) "SehleMaterialTerrain", AZ_TYPE_BLOCK, sizeof (SehleMaterialTerrainClass), sizeof (SehleMaterialTerrain), AZ_CLASS_ZERO_MEMORY,
+		az_register_type (&sehle_material_terrain_type, (const unsigned char *) "SehleMaterialTerrain", AZ_TYPE_BLOCK, sizeof (SehleMaterialTerrainClass), sizeof (SehleMaterialTerrain), AZ_FLAG_ZERO_MEMORY,
 			(void (*) (AZClass *)) material_terrain_class_init,
 			(void (*) (const AZImplementation *, void *)) material_terrain_init,
 			NULL);

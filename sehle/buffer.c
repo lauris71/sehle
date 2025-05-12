@@ -38,11 +38,11 @@ unsigned int
 sehle_buffer_get_type (void)
 {
 	if (!buffer_type) {
-		az_register_type (&buffer_type, (const unsigned char *) "SehleBuffer", SEHLE_TYPE_RESOURCE, sizeof (SehleBufferClass), sizeof (SehleBuffer), AZ_CLASS_IS_ABSTRACT,
+		buffer_class = (SehleBufferClass *) az_register_type (&buffer_type, (const unsigned char *) "SehleBuffer", SEHLE_TYPE_RESOURCE, sizeof (SehleBufferClass), sizeof (SehleBuffer), AZ_FLAG_ABSTRACT,
 			(void (*) (AZClass *)) buffer_class_init,
 			NULL,
 			(void (*) (const AZImplementation *, void *)) buffer_finalize);
-		buffer_class = (SehleBufferClass *) az_type_get_class (buffer_type);
+		parent_class = (SehleResourceClass *) az_class_parent((AZClass *) buffer_class);
 	}
 	return buffer_type;
 }
@@ -50,7 +50,6 @@ sehle_buffer_get_type (void)
 static void
 buffer_class_init (SehleBufferClass *klass)
 {
-	parent_class = (SehleResourceClass *) ((AZClass *) klass)->parent;
 	klass->resource_class.active_object_class.object_class.shutdown = buffer_shutdown;
 	klass->resource_class.build = buffer_build;
 }

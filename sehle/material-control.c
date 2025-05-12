@@ -84,7 +84,7 @@ unsigned int
 sehle_material_control_get_type (void)
 {
 	if (!material_control_type) {
-		az_register_type (&material_control_type, (const unsigned char *) "SehleMaterialControl", AZ_TYPE_BLOCK, sizeof (SehleMaterialControlClass), sizeof (SehleMaterialControl), AZ_CLASS_ZERO_MEMORY,
+		az_register_type (&material_control_type, (const unsigned char *) "SehleMaterialControl", AZ_TYPE_BLOCK, sizeof (SehleMaterialControlClass), sizeof (SehleMaterialControl), AZ_FLAG_ZERO_MEMORY,
 			(void (*) (AZClass *)) material_control_class_init,
 			(void (*) (const AZImplementation *, void *)) material_control_init,
 			NULL);

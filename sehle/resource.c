@@ -26,9 +26,10 @@ sehle_resource_get_type (void)
 {
 	static unsigned int type = 0;
 	if (!type) {
-		az_register_type (&type, (const unsigned char *) "SehleResource", AZ_TYPE_ACTIVE_OBJECT, sizeof (SehleResourceClass), sizeof (SehleResource), AZ_CLASS_IS_ABSTRACT,
+		AZClass *klass = az_register_type (&type, (const unsigned char *) "SehleResource", AZ_TYPE_ACTIVE_OBJECT, sizeof (SehleResourceClass), sizeof (SehleResource), AZ_FLAG_ABSTRACT,
 			(void (*) (AZClass *)) resource_class_init,
 			NULL, NULL);
+		parent_class = (AZActiveObjectClass *) az_class_parent(klass);
 	}
 	return type;
 }
@@ -36,8 +37,7 @@ sehle_resource_get_type (void)
 static void
 resource_class_init (SehleResourceClass *klass)
 {
-	parent_class = (AZActiveObjectClass *) ((AZClass *) klass)->parent;
-	klass->active_object_class.object_class.shutdown = resource_shutdown;
+	((AZObjectClass *) klass)->shutdown = resource_shutdown;
 }
 
 static void

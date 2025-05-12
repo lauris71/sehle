@@ -93,7 +93,7 @@ unsigned int
 sehle_light_volume_get_type (void)
 {
 	if (!sehle_light_volume_type) {
-		az_register_type (&sehle_light_volume_type, (const unsigned char *) "SehleLightVolume", AZ_TYPE_STRUCT, sizeof (SehleLightVolumeClass), sizeof (SehleLightVolume), AZ_CLASS_ZERO_MEMORY,
+		az_register_type (&sehle_light_volume_type, (const unsigned char *) "SehleLightVolume", AZ_TYPE_STRUCT, sizeof (SehleLightVolumeClass), sizeof (SehleLightVolume), AZ_FLAG_ZERO_MEMORY,
 			(void (*) (AZClass *)) light_volume_class_init,
 			(void (*) (const AZImplementation *, void *)) light_volume_init,
 			NULL);

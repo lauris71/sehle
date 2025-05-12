@@ -13,6 +13,7 @@
 #include <elea/geometry.h>
 #include <elea/matrix3x4.h>
 #include <elea/matrix4x4.h>
+#include <elea/vector2.h>
 #include <elea/vector3.h>
 #include <nr/pixblock.h>
 #include <sehle/engine.h>
@@ -36,6 +37,13 @@ static int width = 800;
 static int height = 600;
 
 #define LAYER_FIRE 1
+
+// Top-view
+// time-scale 2
+// lacunarity 2
+// Side view
+// time-scale 1
+// lacunarity 3
 
 static void
 setup_sdl()
@@ -110,7 +118,6 @@ read_texture(NRPixBlock *pxb, const char *filename)
         exit(1);
     }
     TGAHeader *hdr = (TGAHeader *) cdata;
-#if 1
     nr_pixblock_setup_transient(pxb, NR_PIXBLOCK_MODE_R8G8B8A8N,
         hdr->x_origin, hdr->y_origin, hdr->x_origin + hdr->width, hdr->y_origin + hdr->height, 0);
     for (uint16_t row = 0; row < hdr->height; row++) {
@@ -124,11 +131,7 @@ read_texture(NRPixBlock *pxb, const char *filename)
             s += 4;
         }
     }
-#else
-    nr_pixblock_setup_extern(pxb, NR_PIXBLOCK_MODE_R8G8B8A8N,
-        hdr->x_origin, hdr->y_origin, hdr->x_origin + hdr->width, hdr->y_origin + hdr->height,
-        hdr->pixels, hdr->width * 4, 0, 0);
-#endif
+    arikkei_munmap(cdata, csize);
 }
 
 enum {
@@ -219,6 +222,128 @@ fire_render (SehleRenderableImplementation *impl, SehleRenderableInstance *inst,
 	sehle_vertex_array_render_triangles (fire->va, 1, 0, fire->va->ibuf->buffer.n_elements);
 }
 
+#define VEC3P(v,i,s) ((EleaVec3f *) ((char *) (v) + (i) * (s)))
+#define VEC2P(v,i,s) ((EleaVec2f *) ((char *) (v) + (i) * (s)))
+
+static void
+generate_cylinder(float *v, unsigned int v_stride_bytes, float *n, unsigned int n_stride_bytes, float *x, unsigned int x_stride_bytes,
+    uint32_t *indices, unsigned int *n_vertices, unsigned int *n_indices, float lower_radius, float upper_radius, float height,
+    unsigned int n_corners, unsigned int close)
+{
+    if (v) {
+        unsigned int vidx = 0;
+        if (close) {
+            /* Lower cap */
+            elea_vec3fp_set_xyz(VEC3P(v, vidx++, v_stride_bytes), 0, 0, -height / 2);
+            for (unsigned int i = 0; i <= n_corners; i++) {
+                elea_vec3fp_set_xyz(VEC3P(v, vidx++, v_stride_bytes), lower_radius * cosf(i * 2 * M_PI / n_corners), lower_radius * sinf(i * 2 * M_PI / n_corners), -height / 2);
+            }
+        }
+        /* Body */
+        for (unsigned int i = 0; i <= n_corners; i++) {
+            elea_vec3fp_set_xyz(VEC3P(v, vidx++, v_stride_bytes), lower_radius * cosf(i * 2 * M_PI / n_corners), lower_radius * sinf(i * 2 * M_PI / n_corners), -height / 2);
+            elea_vec3fp_set_xyz(VEC3P(v, vidx++, v_stride_bytes), upper_radius * cosf(i * 2 * M_PI / n_corners), upper_radius * sinf(i * 2 * M_PI / n_corners), height / 2);
+        }
+        if (close) {
+            /* Upper cap */
+            for (unsigned int i = 0; i <= n_corners; i++) {
+                elea_vec3fp_set_xyz(VEC3P(v, vidx++, v_stride_bytes), upper_radius * cosf(i * 2 * M_PI / n_corners), upper_radius * sinf(i * 2 * M_PI / n_corners), height / 2);
+            }
+            elea_vec3fp_set_xyz(VEC3P(v, vidx++, v_stride_bytes), 0, 0, height / 2);
+        }
+    }
+    if (n) {
+        unsigned int vidx = 0;
+        float d = lower_radius - upper_radius;
+        float l = sqrtf(height * height * d * d);
+        float sin_a = d / l;
+        float cos_a = height / l;
+        if (close) {
+            /* Lower cap */
+            elea_vec3fp_set_xyz(VEC3P(v, vidx++, v_stride_bytes), 0, 0, -1);
+            for (unsigned int i = 0; i <= n_corners; i++) {
+                elea_vec3fp_set_xyz(VEC3P(v, vidx++, v_stride_bytes), 0, 0, -1);
+            }
+        }
+        /* Body */
+        for (unsigned int i = 0; i <= n_corners; i++) {
+            float x = cos_a * cosf(i * 2 * M_PI / n_corners);
+            float y = cos_a * sinf(i * 2 * M_PI / n_corners);
+            float z = sin_a;
+            elea_vec3fp_set_xyz(VEC3P(v, vidx++, v_stride_bytes), x, y, z);
+            elea_vec3fp_set_xyz(VEC3P(v, vidx++, v_stride_bytes), x, y, z);
+        }
+        if (close) {
+            /* Upper cap */
+            for (unsigned int i = 0; i <= n_corners; i++) {
+                elea_vec3fp_set_xyz(VEC3P(v, vidx++, v_stride_bytes), 0, 0, 1);
+            }
+            elea_vec3fp_set_xyz(VEC3P(v, vidx++, v_stride_bytes), 0, 0, 1);
+        }
+    }
+    if (x) {
+        unsigned int vidx = 0;
+        if (close) {
+            /* Lower cap */
+            elea_vec2fp_set_xy(VEC2P(v, vidx++, v_stride_bytes), 0, 0);
+            for (unsigned int i = 0; i <= n_corners; i++) {
+                elea_vec2fp_set_xy(VEC2P(v, vidx++, v_stride_bytes), 0, 0);
+            }
+        }
+        /* Body */
+        for (unsigned int i = 0; i <= n_corners; i++) {
+            elea_vec2fp_set_xy(VEC2P(v, vidx++, v_stride_bytes), (float) n_corners / i, 0);
+            elea_vec2fp_set_xy(VEC2P(v, vidx++, v_stride_bytes), (float) n_corners / i, 1);
+        }
+        if (close) {
+            /* Upper cap */
+            for (unsigned int i = 0; i <= n_corners; i++) {
+                elea_vec2fp_set_xy(VEC2P(v, vidx++, v_stride_bytes), 0, 1);
+            }
+            elea_vec2fp_set_xy(VEC2P(v, vidx++, v_stride_bytes), 0, 1);
+        }
+    }
+    if (indices) {
+        unsigned int vbase = 0;
+        if (close) {
+            for (unsigned int i = 0; i < n_corners; i++) {
+                *indices++ = 0;
+                *indices++ = i + 1;
+                *indices++ = i;
+            }
+            vbase = 1 + n_corners + 1;
+        }
+        for (unsigned int i = 0; i < n_corners; i++) {
+            *indices++ = vbase + 2 * i;
+            *indices++ = vbase + 2 * (i + 1) + 1;
+            *indices++ = vbase + 2 * i + 1;
+            *indices++ = vbase + 2 * i;
+            *indices++ = vbase + 2 * (i + 1);
+            *indices++ = vbase + 2 * (i + 1) + 1;
+        }
+        if (close) {
+            vbase = 1 + n_corners + 1 + 2 * (n_corners + 1);
+            for (unsigned int i = 0; i < n_corners; i++) {
+                *indices++ = vbase + i;
+                *indices++ = vbase + i + 1;
+                *indices++ = vbase + n_corners + 1 + 1;
+            }
+        }
+    }
+    if (n_vertices) {
+        *n_vertices = 2 * (n_corners + 1);
+        if (close) {
+            *n_vertices += 2 * (n_corners + 1);
+            *n_vertices += 2;
+        }
+    }
+    if (n_indices) {
+        *n_indices = 2 * n_corners * 3;
+        if (close) {
+            *n_indices += 2 * n_corners + 3;
+        }
+    }
+}
 
 static void
 fire_initialize(FireImpl *impl, FireInst *inst, SehleEngine *engine)
@@ -362,9 +487,10 @@ main(int argc, const char **argv)
     /* Update view parameters in render context  */
     sehle_render_context_set_view (&ctx, &v2w, &proj);
 
-    double start = arikkei_get_time();
-    double time;
+    double last_time = arikkei_get_time();
+    float time_scale = 1;
     unsigned int alive = 1;
+    float scale = 1.18920712f;
     while (alive) {
         static unsigned int button = 0;
         SDL_Event evt;
@@ -396,9 +522,41 @@ main(int argc, const char **argv)
             case SDL_KEYDOWN:
                 if (evt.key.keysym.sym == SDLK_ESCAPE) {
                     alive = 0;
+                } else if (evt.key.keysym.sym == SDLK_LSHIFT) {
+                    scale = 1 / 1.18920712f;
+                    fprintf(stderr, "Scale: %.2f\n", scale);
+                } else {
+                    switch (evt.key.keysym.sym) {
+                    case SDLK_1:
+                        time_scale *= scale;
+                        fprintf(stderr, "Time scale: %.2f\n", time_scale);
+                        break;
+                    case SDLK_2:
+                        fire_inst.noiseScale.w *= scale;
+                        fprintf(stderr, "Noise scale (w): %.2f\n", fire_inst.noiseScale.w);
+                        break;
+                    case SDLK_3:
+                        fire_inst.magnitude *= scale;
+                        fprintf(stderr, "Magnitude: %.2f\n", fire_inst.magnitude);
+                        break;
+                    case SDLK_4:
+                        fire_inst.lacunarity *= scale;
+                        fprintf(stderr, "Lacunarity: %.2f\n", fire_inst.lacunarity);
+                        break;
+                    case SDLK_5:
+                        fire_inst.gain *= scale;
+                        fprintf(stderr, "Gain: %.2f\n", fire_inst.gain);
+                        break;
+                    default:
+                        break;
+                    }
                 }
                 break;
             case SDL_KEYUP:
+                if (evt.key.keysym.sym == SDLK_LSHIFT) {
+                    scale = 1.18920712f;
+                    fprintf(stderr, "Scale: %.2f\n", scale);
+                }
                 break;
             case SDL_TEXTINPUT:
                 break;
@@ -424,22 +582,25 @@ main(int argc, const char **argv)
                 alive = 0;
                 break;
             default:
-                time = arikkei_get_time() - start;
-                fire_inst.time = (float) time;
-
-                EleaMat3x4f v2w, m0, m1;
-                m0 = EleaMat3x4fIdentity;
-                elea_mat3x4f_rotate_right_axis_angle(&m1, &m0, &EleaVec3fX, M_PI_2 - cam_angle_x);
-                elea_mat3x4f_rotate_left_axis_angle(&v2w, &m1, &EleaVec3fZ, cam_angle_z);
-                elea_mat3x4f_translate_self_right_xyz(&v2w, 0, 0, cam_dist);
-                EleaMat4x4f proj;
-                elea_mat4x4f_set_frustum_fov(&proj, 0.1f, (float) width / height, 0.1f, 100.0f);
-                /* Update view parameters in render context  */
-                sehle_render_context_set_view (&ctx, &v2w, &proj);
-
-                //elea_mat3x4f_set_rotation_axis_angle(&mesh.r2w, &EleaVec3fZ, fmod(time, 2 * M_PI));
                 break;
         }
+
+        double time = arikkei_get_time();
+        double delta = time - last_time;
+        fire_inst.time += (float) delta * time_scale;
+        last_time = time;
+
+        EleaMat3x4f v2w, m0, m1;
+        m0 = EleaMat3x4fIdentity;
+        elea_mat3x4f_rotate_right_axis_angle(&m1, &m0, &EleaVec3fX, M_PI_2 - cam_angle_x);
+        elea_mat3x4f_rotate_left_axis_angle(&v2w, &m1, &EleaVec3fZ, cam_angle_z);
+        elea_mat3x4f_translate_self_right_xyz(&v2w, 0, 0, cam_dist);
+        EleaMat4x4f proj;
+        elea_mat4x4f_set_frustum_fov(&proj, 0.1f, (float) width / height, 0.1f, 100.0f);
+        /* Update view parameters in render context  */
+        sehle_render_context_set_view (&ctx, &v2w, &proj);
+
+
         /* Re-bind context to ensure the synchronization with engine */
         sehle_render_context_bind(&ctx);
         /* Clear frame */

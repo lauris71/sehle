@@ -56,11 +56,11 @@ unsigned int
 sehle_program_get_type (void)
 {
 	if (!program_type) {
-		az_register_type (&program_type, (const unsigned char *) "SehleProgram", SEHLE_TYPE_RESOURCE, sizeof (SehleProgramClass), sizeof (SehleProgram), 0,
+		program_class = (SehleProgramClass *) az_register_type (&program_type, (const unsigned char *) "SehleProgram", SEHLE_TYPE_RESOURCE, sizeof (SehleProgramClass), sizeof (SehleProgram), 0,
 			(void (*) (AZClass *)) program_class_init,
 			(void (*) (const AZImplementation *, void *)) program_init,
 			(void (*) (const AZImplementation *, void *)) program_finalize);
-		program_class = (SehleProgramClass *) az_type_get_class (program_type);
+		parent_class = (SehleResourceClass *) az_class_parent((AZClass *) program_class);
 	}
 	return program_type;
 }
@@ -68,7 +68,6 @@ sehle_program_get_type (void)
 static void
 program_class_init (SehleProgramClass *klass)
 {
-	parent_class = (SehleResourceClass *) ((AZClass *) klass)->parent;
 	klass->resource_class.active_object_class.object_class.shutdown = program_shutdown;
 	klass->resource_class.build = program_build;
 }

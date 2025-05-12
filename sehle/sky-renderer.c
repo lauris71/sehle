@@ -91,7 +91,7 @@ unsigned int
 sehle_sky_renderer_get_type (void)
 {
 	if (!sehle_sky_renderer_type) {
-		az_register_type (&sehle_sky_renderer_type, (const unsigned char *) "SehleSkyRenderer", AZ_TYPE_BLOCK, sizeof (SehleSkyRendererClass), sizeof (SehleSkyRenderer), AZ_CLASS_ZERO_MEMORY,
+		az_register_type (&sehle_sky_renderer_type, (const unsigned char *) "SehleSkyRenderer", AZ_TYPE_BLOCK, sizeof (SehleSkyRendererClass), sizeof (SehleSkyRenderer), AZ_FLAG_ZERO_MEMORY,
 			(void (*) (AZClass *)) sky_class_init,
 			(void (*) (const AZImplementation *, void *)) sky_init,
 			NULL);

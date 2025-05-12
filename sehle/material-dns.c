@@ -125,7 +125,7 @@ unsigned int
 sehle_material_dns_get_type (void)
 {
 	if (!sehle_material_dns_type) {
-		az_register_type (&sehle_material_dns_type, (const unsigned char *) "SehleMaterialDNS", AZ_TYPE_BLOCK, sizeof (SehleMaterialDNSClass), sizeof (SehleMaterialDNS), AZ_CLASS_ZERO_MEMORY,
+		az_register_type (&sehle_material_dns_type, (const unsigned char *) "SehleMaterialDNS", AZ_TYPE_BLOCK, sizeof (SehleMaterialDNSClass), sizeof (SehleMaterialDNS), AZ_FLAG_ZERO_MEMORY,
 			(void (*) (AZClass *)) material_dns_class_init,
 			(void (*) (const AZImplementation *, void *)) material_dns_init,
 			NULL);

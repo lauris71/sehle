@@ -45,7 +45,7 @@ unsigned int
 sehle_engine_get_type(void) {
     static unsigned int type = 0;
     if (!type) {
-        az_register_type(&type, (const unsigned char *) "SehleEngine", AZ_TYPE_BLOCK, sizeof (AZClass), sizeof (SehleEngine), AZ_CLASS_IS_FINAL | AZ_CLASS_ZERO_MEMORY,
+        az_register_type(&type, (const unsigned char *) "SehleEngine", AZ_TYPE_BLOCK, sizeof (AZClass), sizeof (SehleEngine), AZ_FLAG_FINAL | AZ_FLAG_ZERO_MEMORY,
                 (void (*) (AZClass *)) engine_class_init,
                 (void (*) (const AZImplementation *, void *)) engine_init,
                 (void (*) (const AZImplementation *, void *)) engine_finalize);

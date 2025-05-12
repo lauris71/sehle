@@ -35,9 +35,10 @@ sehle_vertex_array_get_type (void)
 {
 	static unsigned int type = 0;
 	if (!type) {
-		az_register_type (&type, (const unsigned char *) "SehleVertexArray", SEHLE_TYPE_RESOURCE, sizeof (SehleVertexArrayClass), sizeof (SehleVertexArray), 0,
+		AZClass *klass = az_register_type (&type, (const unsigned char *) "SehleVertexArray", SEHLE_TYPE_RESOURCE, sizeof (SehleVertexArrayClass), sizeof (SehleVertexArray), 0,
 			(void (*) (AZClass *)) vertex_array_class_init,
 			NULL, NULL);
+		parent_class = (SehleResourceClass *) az_class_parent(klass);
 	}
 	return type;
 }
@@ -45,15 +46,14 @@ sehle_vertex_array_get_type (void)
 static void
 vertex_array_class_init (SehleVertexArrayClass *klass)
 {
-	parent_class = (SehleResourceClass *) ((AZClass *) klass)->parent;
 	klass->resource_klass.active_object_class.object_class.shutdown = vertex_array_shutdown;
 	klass->resource_klass.build = vertex_array_build;
 }
 
 static void
-vertex_array_shutdown (AZObject *object)
+vertex_array_shutdown (AZObject *obj)
 {
-	SehleVertexArray *va = (SehleVertexArray  *) object;
+	SehleVertexArray *va = (SehleVertexArray  *) obj;
 	if (va->resource.gl_handle) {
 		glDeleteVertexArrays (1, &va->resource.gl_handle);
 		va->resource.gl_handle = 0;
@@ -68,9 +68,7 @@ vertex_array_shutdown (AZObject *object)
 		az_object_unref ((AZObject*) va->ibuf);
 		va->ibuf = NULL;
 	}
-	if (((AZObjectClass *) parent_class)->shutdown) {
-		((AZObjectClass *) parent_class)->shutdown (object);
-	}
+	((AZObjectClass *) parent_class)->shutdown (obj);
 }
 
 static void

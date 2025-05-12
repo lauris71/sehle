@@ -35,7 +35,7 @@ unsigned int
 sehle_renderable_list_get_type (void)
 {
 	if (!group_type) {
-		az_register_type (&group_type, (const unsigned char *) "SehleRenderableList", AZ_TYPE_STRUCT, sizeof (SehleRenderableListClass), sizeof (SehleRenderableList), AZ_CLASS_ZERO_MEMORY,
+		az_register_type (&group_type, (const unsigned char *) "SehleRenderableList", AZ_TYPE_STRUCT, sizeof (SehleRenderableListClass), sizeof (SehleRenderableList), AZ_FLAG_ZERO_MEMORY,
 						(void (*) (AZClass *)) renderable_list_class_init,
 						NULL,
 						(void (*) (const AZImplementation *, void *)) renderable_list_finalize);

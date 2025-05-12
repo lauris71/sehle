@@ -30,9 +30,10 @@ sehle_render_target_get_type (void)
 {
 	static unsigned int type = 0;
 	if (!type) {
-		az_register_type (&type, (const unsigned char *) "SehleRenderTarget", SEHLE_TYPE_RESOURCE, sizeof (SehleRenderTargetClass), sizeof (SehleRenderTarget), 0,
+		AZClass *klass = az_register_type (&type, (const unsigned char *) "SehleRenderTarget", SEHLE_TYPE_RESOURCE, sizeof (SehleRenderTargetClass), sizeof (SehleRenderTarget), 0,
 			(void (*) (AZClass *)) render_target_class_init,
 			NULL, NULL);
+		parent_class = (SehleResourceClass *) az_class_parent(klass);
 	}
 	return type;
 }
@@ -40,22 +41,19 @@ sehle_render_target_get_type (void)
 static void
 render_target_class_init (SehleRenderTargetClass *klass)
 {
-	parent_class = (SehleResourceClass *) ((AZClass *) klass)->parent;
 	((AZObjectClass *) klass)->shutdown = render_target_shutdown;
 }
 
 static void
-render_target_shutdown (AZObject *object)
+render_target_shutdown (AZObject *obj)
 {
-	SehleRenderTarget *tgt = SEHLE_RENDER_TARGET(object);
+	SehleRenderTarget *tgt = SEHLE_RENDER_TARGET(obj);
 	tgt->resource.engine = NULL;
 	if (tgt->resource.gl_handle) {
 		glDeleteFramebuffers (1, &tgt->resource.gl_handle);
 		tgt->resource.gl_handle = 0;
 	}
-	if (((AZObjectClass *) parent_class)->shutdown) {
-		((AZObjectClass *) parent_class)->shutdown (object);
-	}
+	((AZObjectClass *) parent_class)->shutdown (obj);
 }
 
 void

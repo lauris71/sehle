@@ -77,7 +77,7 @@ unsigned int
 sehle_particle_renderer_get_type (void)
 {
 	if (!sehle_particle_renderer_type) {
-		az_register_type (&sehle_particle_renderer_type, (const unsigned char *) "SehleParticleRenderer", AZ_TYPE_BLOCK, sizeof (SehleParticleRendererClass), sizeof (SehleParticleRenderer), AZ_CLASS_ZERO_MEMORY,
+		az_register_type (&sehle_particle_renderer_type, (const unsigned char *) "SehleParticleRenderer", AZ_TYPE_BLOCK, sizeof (SehleParticleRendererClass), sizeof (SehleParticleRenderer), AZ_FLAG_ZERO_MEMORY,
 			(void (*) (AZClass *)) particle_class_init,
 			(void (*) (const AZImplementation *, void *)) particle_init,
 			NULL);

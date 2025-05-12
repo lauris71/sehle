@@ -26,8 +26,6 @@ static void render_target_texture_finalize (SehleRenderTargetTextureClass *klass
 /* SehleRenderTarget implementation */
 static void render_target_texture_build (SehleResource *res);
 
-static SehleRenderTargetClass *parent_class;
-
 unsigned int
 sehle_render_target_texture_get_type (void)
 {
@@ -44,7 +42,6 @@ sehle_render_target_texture_get_type (void)
 static void
 render_target_texture_class_init (SehleRenderTargetTextureClass *klass)
 {
-	parent_class = (SehleRenderTargetClass *) ((AZClass *) klass)->parent;
 	klass->render_target_klass.resource_klass.build = render_target_texture_build;
 }
 

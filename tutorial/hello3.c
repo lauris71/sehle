@@ -66,10 +66,22 @@ read_texture(NRPixBlock *pxb, const char *filename)
         exit(1);
     }
     TGAHeader *hdr = (TGAHeader *) cdata;
-    nr_pixblock_setup_extern(pxb, NR_PIXBLOCK_MODE_R8G8B8A8N,
-        hdr->x_origin, hdr->y_origin, hdr->x_origin + hdr->width, hdr->y_origin + hdr->height,
-        hdr->pixels, hdr->width * 4, 0, 0);
+    nr_pixblock_setup_transient(pxb, NR_PIXBLOCK_MODE_R8G8B8A8N,
+        hdr->x_origin, hdr->y_origin, hdr->x_origin + hdr->width, hdr->y_origin + hdr->height, 0);
+    for (uint16_t row = 0; row < hdr->height; row++) {
+        const uint8_t *s = hdr->pixels + row * hdr->width * 4;
+        uint8_t *d = nr_pixblock_get_row(pxb, row);
+        for (uint16_t col = 0; col < hdr->width; col++) {
+            *d++ = s[2];
+            *d++ = s[1];
+            *d++ = s[0];
+            *d++ = s[3];
+            s += 4;
+        }
+    }
+    arikkei_munmap(cdata, csize);
 }
+
 
 /*
  * A helper function to create 20x20m ground platform
@@ -289,7 +301,7 @@ main(int argc, const char **argv)
 #endif
     /* Assign created buffers to vertex array */
     //SehleVertexArray *va = sehle_vertex_array_new_from_buffers(engine, (const uint8_t *) "HelloCube", vbuf, ibuf);
-    SehleVertexArray *va = sehle_engine_get_standard_geometry (engine, SEHLE_GEOMETRY_UNIT_CUBE_INSIDE);
+    SehleVertexArray *va = sehle_engine_get_standard_geometry (engine, SEHLE_GEOMETRY_UNIT_CUBE_OUTSIDE);
 
     /*
      * As we create more than one renderable we want to put these into renderable collection so

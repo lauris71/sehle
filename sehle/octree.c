@@ -218,7 +218,7 @@ unsigned int
 sehle_static_octree_get_type ()
 {
 	if (!sehle_static_octree_type) {
-		sehle_static_octree_class = (SehleStaticOctreeClass *) az_register_type (&sehle_static_octree_type, (const unsigned char *) "SehleStaticOctree", AZ_TYPE_STRUCT, sizeof (SehleStaticOctreeClass), sizeof (SehleStaticOctree), AZ_CLASS_ZERO_MEMORY,
+		sehle_static_octree_class = (SehleStaticOctreeClass *) az_register_type (&sehle_static_octree_type, (const unsigned char *) "SehleStaticOctree", AZ_TYPE_STRUCT, sizeof (SehleStaticOctreeClass), sizeof (SehleStaticOctree), AZ_FLAG_ZERO_MEMORY,
 			(void (*) (AZClass *)) static_octree_class_init,
 			NULL,
 			(void (*) (const AZImplementation *, void *)) static_octree_finalize);

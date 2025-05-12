@@ -28,7 +28,7 @@ sehle_material_get_type (void)
 	static unsigned int type = 0;
 	if (!type) {
 		az_register_interface_type (&type, (const unsigned char *) "SehleMaterial", AZ_TYPE_INTERFACE,
-			sizeof (SehleMaterialClass), sizeof (SehleMaterialImplementation), sizeof (SehleMaterialInstance), AZ_CLASS_ZERO_MEMORY,
+			sizeof (SehleMaterialClass), sizeof (SehleMaterialImplementation), sizeof (SehleMaterialInstance), AZ_FLAG_ZERO_MEMORY,
 			(void (*) (AZClass *)) material_class_init,
 			(void (*) (AZImplementation *)) material_implementation_init,
 			(void (*) (const AZImplementation *, void *)) material_instance_init,

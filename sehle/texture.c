@@ -36,11 +36,11 @@ unsigned int
 sehle_texture_get_type (void)
 {
 	if (!texture_type) {
-		az_register_type (&texture_type, (const unsigned char *) "SehleTexture", SEHLE_TYPE_RESOURCE, sizeof (SehleTextureClass), sizeof (SehleTexture), AZ_CLASS_IS_ABSTRACT,
+		texture_class = (SehleTextureClass *) az_register_type (&texture_type, (const unsigned char *) "SehleTexture", SEHLE_TYPE_RESOURCE, sizeof (SehleTextureClass), sizeof (SehleTexture), AZ_FLAG_ABSTRACT,
 			(void (*) (AZClass *)) texture_class_init,
 			(void (*) (const AZImplementation *, void *)) texture_init,
-			(void (*) (const AZImplementation *, void *)) texture_finalize);
-		texture_class = (SehleTextureClass *) az_type_get_class (texture_type);
+			NULL);
+		parent_class = (SehleResourceClass *) az_class_parent((AZClass *) texture_class);
 	}
 	return texture_type;
 }
@@ -48,7 +48,6 @@ sehle_texture_get_type (void)
 static void
 texture_class_init (SehleTextureClass *klass)
 {
-	parent_class = (SehleResourceClass *) ((AZClass *) klass)->parent;
 	klass->resource_class.active_object_class.object_class.shutdown = texture_shutdown;
 }
 
@@ -60,11 +59,6 @@ texture_init (SehleTextureClass *klass, SehleTexture *tex)
 }
 
 static void
-texture_finalize (SehleTextureClass *klass, SehleTexture *tex)
-{
-}
-
-static void
 texture_shutdown (AZObject *obj)
 {
 	SehleTexture *tex = (SehleTexture *) obj;
@@ -72,7 +66,7 @@ texture_shutdown (AZObject *obj)
 		glDeleteTextures (1, &tex->resource.gl_handle);
 		tex->resource.gl_handle = 0;
 	}
-	parent_class->active_object_class.object_class.shutdown (obj);
+	((AZObjectClass *) parent_class)->shutdown (obj);
 }
 
 void

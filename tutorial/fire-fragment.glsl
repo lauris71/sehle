@@ -157,7 +157,7 @@ void main() {
     for(int i = 0; i < ITERATIONS; i++) {
         rayPos += rayDir * rayLen;
         vec3 lp = localize(rayPos);
-        //lp.z += 0.5;
+        //lp.z += 0.125;
         //lp.y -= 1.0;
         lp.xy *= 2.0;
         col += samplerFire(lp, noiseScale);

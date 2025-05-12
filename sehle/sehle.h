@@ -84,7 +84,7 @@
 #define SEHLE_RENDER_GBUFFER 8
 
 /*
- * RENDER_FORWARD - write color and/or depth to framebuffer (with standard blending) using up to 4 lights and specail scheme
+ * RENDER_FORWARD - write color and/or depth to framebuffer (with standard blending) using up to 4 lights and special scheme
  */
 #define SEHLE_RENDER_FORWARD 16
 
