@@ -8,9 +8,9 @@
 
 #include <stdio.h>
 
-#include <az/class.h>
-
 #include "GL/glew.h"
+
+#include <az/extend.h>
 
 #include <sehle/index-buffer.h>
 #include "engine.h"

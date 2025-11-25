@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include <az/class.h>
+#include <az/extend.h>
 
 #include "engine.h"
 #include <sehle/render-context.h>

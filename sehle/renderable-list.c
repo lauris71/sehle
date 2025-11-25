@@ -14,7 +14,8 @@ static const int debug = 1;
 #include <stdio.h>
 
 #include <arikkei/arikkei-utils.h>
-#include <az/types.h>
+
+#include <az/extend.h>
 
 #include <sehle/renderable-list.h>
 

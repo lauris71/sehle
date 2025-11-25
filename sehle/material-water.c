@@ -12,6 +12,8 @@
 
 #include <arikkei/arikkei-utils.h>
 
+#include <az/extend.h>
+
 #include "engine.h"
 #include "texture.h"
 #include <sehle/render-context.h>

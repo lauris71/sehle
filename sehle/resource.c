@@ -12,6 +12,8 @@ static const int debug = 0;
 #include <stdio.h>
 #include <string.h>
 
+#include <az/extend.h>
+
 #include <sehle/engine.h>
 #include <sehle/resource.h>
 

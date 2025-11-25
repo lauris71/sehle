@@ -15,6 +15,8 @@ static const int debug = 0;
 
 #include "GL/glew.h"
 
+#include <az/extend.h>
+
 #include "engine.h"
 #include "texture-2d.h"
 

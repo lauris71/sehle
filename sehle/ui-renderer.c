@@ -9,6 +9,8 @@
 
 #define UI_RENDERER_BUFFER_SIZE 256
 
+#include <az/extend.h>
+
 #include <sehle/engine.h>
 #include <sehle/index-buffer.h>
 #include <sehle/program-overlay.h>

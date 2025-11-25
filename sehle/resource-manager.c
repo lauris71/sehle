@@ -10,6 +10,8 @@ static const int debug = 0;
 
 #include <string.h>
 
+#include <az/extend.h>
+
 #include <sehle/resource.h>
 
 #include <sehle/resource-manager.h>
@@ -37,7 +39,7 @@ static unsigned int
 resource_hash (const void *key)
 {
 	SehleResource *res = (SehleResource *) key;
-	return arikkei_string_hash (res->id) ^ arikkei_int32_hash (ARIKKEI_INT_TO_POINTER(res->active_object.object.klass->reference_klass.klass.implementation.type));
+	return arikkei_string_hash (res->id) ^ arikkei_int32_hash (ARIKKEI_INT_TO_POINTER(AZ_CLASS_TYPE(&res->active_object.object.klass->reference_klass.klass)));
 }
 
 static unsigned int
@@ -83,7 +85,7 @@ lookup_equal (const void *lhs, const void *rhs)
 {
 	struct Lookup *lookup = (struct Lookup *) lhs;
 	SehleResource *res = (SehleResource *) rhs;
-	return (lookup->type == res->active_object.object.klass->reference_klass.klass.implementation.type) && !strcmp ((const char *) lookup->key, (const char *) res->id);
+	return (lookup->type == AZ_CLASS_TYPE(&res->active_object.object.klass->reference_klass.klass)) && !strcmp ((const char *) lookup->key, (const char *) res->id);
 }
 
 SehleResource *

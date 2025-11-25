@@ -8,7 +8,7 @@
 
 #include <stdio.h>
 
-#include <az/class.h>
+#include <az/extend.h>
 
 #include <arikkei/arikkei-iolib.h>
 

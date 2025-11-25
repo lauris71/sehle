@@ -11,7 +11,7 @@
 
 #include "GL/glew.h"
 
-#include <az/class.h>
+#include <az/extend.h>
 
 #include <sehle/program.h>
 #include <sehle/render-context.h>

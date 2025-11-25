@@ -14,6 +14,8 @@ static const int debug = 1;
 
 #include "GL/glew.h"
 
+#include <az/extend.h>
+
 #include "engine.h"
 #include "buffer.h"
 

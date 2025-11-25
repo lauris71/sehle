@@ -22,6 +22,9 @@ static const int debug = 0;
 #include <arikkei/arikkei-utils.h>
 
 #include <GL/glew.h>
+
+#include <az/extend.h>
+
 #include "shaders-dict.h"
 
 #include "engine.h"

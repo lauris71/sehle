@@ -12,6 +12,8 @@
 #include <arikkei/arikkei-iolib.h>
 #include <arikkei/arikkei-utils.h>
 
+#include <az/extend.h>
+
 #include <sehle/light-directional.h>
 #include <sehle/render-target.h>
 #include <sehle/render-target-deferred.h>

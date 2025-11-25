@@ -13,6 +13,8 @@
 
 #include "GL/glew.h"
 
+#include <az/extend.h>
+
 #include "engine.h"
 #include "program.h"
 #include "render-target-texture.h"

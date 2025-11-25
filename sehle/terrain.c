@@ -6,7 +6,7 @@
  * Copyright (C) Lauris Kaplinski 2022
  */
 
-#include <az/class.h>
+#include <az/extend.h>
 
 #include <sehle/index-buffer.h>
 #include <sehle/material.h>

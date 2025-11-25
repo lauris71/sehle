@@ -13,9 +13,12 @@ static const int debug = 0;
 #include <assert.h>
 #include <stdio.h>
 
+#include <arikkei/arikkei-dict.h>
+
+#include <az/extend.h>
+
 #include <nr/pixblock.h>
 #include <elea/geometry.h>
-#include <arikkei/arikkei-dict.h>
 
 #include "GL/glew.h"
 

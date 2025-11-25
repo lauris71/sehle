@@ -18,6 +18,8 @@ static const int debug = 0;
 
 #include "GL/glew.h"
 
+#include <az/extend.h>
+
 #include "engine.h"
 #include <sehle/material.h>
 #include "shader.h"

@@ -13,6 +13,8 @@ static const int debug = 0;
 
 #include "GL/glew.h"
 
+#include <az/extend.h>
+
 #include <sehle/engine.h>
 #include <sehle/texture-2d.h>
 
