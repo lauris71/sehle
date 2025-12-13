@@ -17,7 +17,7 @@ typedef struct _SehleProgramVariable SehleProgramVariable;
 
 extern const char *sehle_attribute_names[];
 
-#include <az/object-list.h>
+#include <az/classes/object-list.h>
 
 #include <sehle/resource.h>
 

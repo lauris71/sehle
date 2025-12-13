@@ -33,7 +33,7 @@ typedef struct _SehleResourceClass SehleResourceClass;
 #define SEHLE_RESOURCE_STATE_READY 2
 #define SEHLE_RESOURCE_STATE_INVALID 3
 
-#include <az/active-object.h>
+#include <az/classes/active-object.h>
 
 #include <sehle/sehle.h>
 
