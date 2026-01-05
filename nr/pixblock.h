@@ -17,6 +17,7 @@ typedef struct _NRPixBlockClass NRPixBlockClass;
 #include <assert.h>
 
 #include <az/class.h>
+#include <az/instance.h>
 
 #include <nr/types.h>
 
@@ -98,7 +99,7 @@ void nr_pixblock_setup_extern_full (NRPixBlock *pb, unsigned int ch_type, unsign
 static inline void
 nr_pixblock_release (NRPixBlock *pb)
 {
-	az_instance_finalize (pb, NR_TYPE_PIXBLOCK);
+	az_instance_finalize_by_type (pb, NR_TYPE_PIXBLOCK);
 }
 
 /* Set up pixblock with one predefined mode */

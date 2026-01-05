@@ -97,7 +97,7 @@ create_shape(HelloShape *shape, SehleEngine *engine, unsigned int type, int dir,
     sehle_index_buffer_unmap(ibuf);
     SehleVertexArray *va = sehle_vertex_array_new_from_buffers(engine, NULL, vbuf, ibuf);
 
-    az_instance_init(&shape->mesh, SEHLE_TYPE_STATIC_MESH);
+    az_instance_init_by_type(&shape->mesh, SEHLE_TYPE_STATIC_MESH);
     sehle_static_mesh_setup(&shape->mesh, engine, 1);
     sehle_static_mesh_set_vertex_array(&shape->mesh, va);
     shape->mesh.renderable_inst.bbox = EleaAABox3fInfinite;
@@ -141,8 +141,8 @@ create_point(HelloPoint *point, SehleEngine *engine, EleaColor4f color, EleaVec3
     point->acc = EleaVec3f0;
     point->bbox = (EleaAABox3f) {-10, -10, 1.5f, 10, 10, 3};
 
-    az_implementation_init((AZImplementation *) &point->point_impl, SEHLE_TYPE_POINT_LIGHT);
-    az_interface_init((AZImplementation *) &point->point_impl, &point->point_inst);
+    az_implementation_init_by_type((AZImplementation *) &point->point_impl, SEHLE_TYPE_POINT_LIGHT);
+    az_instance_init((AZImplementation *) &point->point_impl, &point->point_inst);
     sehle_point_light_setup(&point->point_inst, engine, 0);
     point->point_inst.light_inst.ambient = EleaColor4fBlack;
     point->point_inst.light_inst.diffuse = color;
@@ -206,8 +206,8 @@ create_spot(HelloSpot *spot, SehleEngine *engine, EleaColor4f color, EleaVec3f p
     spot->r_impl = SEHLE_RENDERABLE_LIST_RENDERABLE_IMPLEMENTATION;
     spot->r_inst = &spot->list.collection_inst.renderable_inst;
 
-    az_implementation_init((AZImplementation *) &spot->spot_impl, SEHLE_TYPE_SPOT_LIGHT);
-    az_interface_init((AZImplementation *) &spot->spot_impl, &spot->spot_inst);
+    az_implementation_init_by_type((AZImplementation *) &spot->spot_impl, SEHLE_TYPE_SPOT_LIGHT);
+    az_instance_init((AZImplementation *) &spot->spot_impl, &spot->spot_inst);
     sehle_spot_light_setup(&spot->spot_inst, engine, 0);
     spot->spot_inst.light_inst.ambient = EleaColor4fBlack;
     spot->spot_inst.light_inst.diffuse = EleaColor4fGreen;
@@ -217,7 +217,7 @@ create_spot(HelloSpot *spot, SehleEngine *engine, EleaColor4f color, EleaVec3f p
     sehle_spot_light_update_geometry(&spot->spot_inst);
     sehle_renderable_list_add_child(&spot->list, &spot->spot_impl.light_impl.renderable_impl, &spot->spot_inst.light_inst.renderable_inst);
 
-    az_instance_init(&spot->mesh, SEHLE_TYPE_STATIC_MESH);
+    az_instance_init_by_type(&spot->mesh, SEHLE_TYPE_STATIC_MESH);
     /* Bind static mesh to engine and set render layers */
     sehle_static_mesh_setup(&spot->mesh, engine, LAYER_DEBUG);
     /* Set up static mesh geometry and bounding box */
@@ -270,7 +270,7 @@ spot_animate(HelloSpot *spot, double time)
 static void
 create_platform(SehleStaticMesh *mesh, SehleEngine *engine)
 {
-    az_instance_init(mesh, SEHLE_TYPE_STATIC_MESH);
+    az_instance_init_by_type(mesh, SEHLE_TYPE_STATIC_MESH);
     sehle_static_mesh_setup(mesh, engine, LAYER_SCENE);
     /* Use pre-built flat rectangle as geometry */
     SehleVertexArray *va = sehle_engine_get_standard_geometry(engine, SEHLE_GEOMETRY_GRID_8x8);
@@ -413,7 +413,7 @@ main(int argc, const char **argv)
 #endif
 
     SehlematerialDNS shape_mat;
-    az_instance_init(&shape_mat, SEHLE_TYPE_MATERIAL_DNS);
+    az_instance_init_by_type(&shape_mat, SEHLE_TYPE_MATERIAL_DNS);
     sehle_material_dns_set_has_colors(&shape_mat, 0);
     sehle_material_dns_set_transparent(&shape_mat, 0, 0);
 

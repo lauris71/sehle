@@ -157,7 +157,7 @@ material_control_update_programs (SehleMaterialControl *mctrl, SehleEngine *engi
 void
 sehle_material_control_init(SehleMaterialControl *mctrl, SehleEngine *engine)
 {
-	az_instance_init (mctrl, SEHLE_TYPE_MATERIAL_CONTROL);
+	az_instance_init_by_type (mctrl, SEHLE_TYPE_MATERIAL_CONTROL);
 	sehle_material_setup (&mctrl->material_inst, 1, 1);
 }
 
@@ -165,7 +165,7 @@ void
 sehle_material_control_finalize(SehleMaterialControl *mctrl)
 {
 	sehle_material_release (&mctrl->material_inst);
-	az_instance_finalize (mctrl, SEHLE_TYPE_MATERIAL_CONTROL);
+	az_instance_finalize_by_type (mctrl, SEHLE_TYPE_MATERIAL_CONTROL);
 }
 
 SehleMaterialControl *

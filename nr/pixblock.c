@@ -70,7 +70,7 @@ nr_pixblock_setup_full (NRPixBlock *pb, unsigned int type, unsigned int n_channe
 {
 	unsigned int size;
 
-	az_instance_init (pb, NR_TYPE_PIXBLOCK);
+	az_instance_init_by_type (pb, NR_TYPE_PIXBLOCK);
 
 	pb->ch_type = type;
 	pb->n_channels = n_channels;
@@ -97,7 +97,7 @@ nr_pixblock_setup_transient_full (NRPixBlock *pb, unsigned int type, unsigned in
 {
 	unsigned int size;
 
-	az_instance_init (pb, NR_TYPE_PIXBLOCK);
+	az_instance_init_by_type (pb, NR_TYPE_PIXBLOCK);
 
 	pb->ch_type = type;
 	pb->n_channels = n_channels;
@@ -132,7 +132,7 @@ nr_pixblock_setup_transient_full (NRPixBlock *pb, unsigned int type, unsigned in
 void
 nr_pixblock_setup_extern_full (NRPixBlock *pb, unsigned int type, unsigned int n_channels, unsigned int colorspace, unsigned int premultiplied, int x0, int y0, int x1, int y1, uint8_t *px, int rs, int empty)
 {
-	az_instance_init (pb, NR_TYPE_PIXBLOCK);
+	az_instance_init_by_type (pb, NR_TYPE_PIXBLOCK);
 
 	pb->ch_type = type;
 	pb->n_channels = n_channels;
@@ -189,7 +189,7 @@ nr_pixblock_setup_extern (NRPixBlock *pb, int mode, int x0, int y0, int x1, int 
 {
 	int w, bpp;
 
-	az_instance_init (pb, NR_TYPE_PIXBLOCK);
+	az_instance_init_by_type (pb, NR_TYPE_PIXBLOCK);
 
 	w = x1 - x0;
 	bpp = (mode == NR_PIXBLOCK_MODE_G8) ? 1 : (mode == NR_PIXBLOCK_MODE_R8G8B8) ? 3 : 4;

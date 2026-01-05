@@ -348,10 +348,10 @@ generate_cylinder(float *v, unsigned int v_stride_bytes, float *n, unsigned int 
 static void
 fire_initialize(FireImpl *impl, FireInst *inst, SehleEngine *engine)
 {
-    az_implementation_init(&impl->rend_impl.interface_impl, SEHLE_TYPE_RENDERABLE);
-    az_implementation_init(&impl->mat_impl.parent_implementation, SEHLE_TYPE_MATERIAL);
-    az_interface_init(&impl->rend_impl.interface_impl, &inst->rend_inst);
-    az_interface_init(&impl->mat_impl.parent_implementation, &inst->mat_inst);
+    az_implementation_init_by_type(&impl->rend_impl.interface_impl, SEHLE_TYPE_RENDERABLE);
+    az_implementation_init_by_type(&impl->mat_impl.parent_implementation, SEHLE_TYPE_MATERIAL);
+    az_instance_init(&impl->rend_impl.interface_impl, &inst->rend_inst);
+    az_instance_init(&impl->mat_impl.parent_implementation, &inst->mat_inst);
     sehle_material_setup(&inst->mat_inst, 1, 1);
 
     inst->r2w = EleaMat3x4fIdentity;

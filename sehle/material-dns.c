@@ -319,14 +319,14 @@ SehleMaterialDNS *
 sehle_material_dns_new (SehleEngine *engine)
 {
 	SehleMaterialDNS *dns = (SehleMaterialDNS *) malloc (sizeof (SehleMaterialDNS));
-	az_instance_init (dns, SEHLE_TYPE_MATERIAL_DNS);
+	az_instance_init_by_type (dns, SEHLE_TYPE_MATERIAL_DNS);
 	return dns;
 }
 
 void
 sehle_material_dns_delete (SehleMaterialDNS *dns)
 {
-	az_instance_finalize (dns, SEHLE_TYPE_MATERIAL_DNS);
+	az_instance_finalize_by_type (dns, SEHLE_TYPE_MATERIAL_DNS);
 	free (dns);
 }
 

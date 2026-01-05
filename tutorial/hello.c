@@ -148,7 +148,7 @@ main(int argc, const char **argv)
      * As it is stack-allocated object we have to call instance_init to set it up
      */
     SehleStaticMesh mesh;
-    az_instance_init(&mesh, SEHLE_TYPE_STATIC_MESH);
+    az_instance_init_by_type(&mesh, SEHLE_TYPE_STATIC_MESH);
     /* Bind static mesh to engine and set render layers */
     sehle_static_mesh_setup(&mesh, engine, 1);
     /* Set up static mesh geometry and bounding box */

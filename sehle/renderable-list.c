@@ -140,14 +140,14 @@ sehle_renderable_list_delete (SehleRenderableList *list)
 void
 sehle_renderable_list_setup (SehleRenderableList *list, SehleEngine *engine, unsigned int layer_mask)
 {
-	az_instance_init (list, SEHLE_TYPE_RENDERABLE_LIST);
+	az_instance_init_by_type (list, SEHLE_TYPE_RENDERABLE_LIST);
 	list->collection_inst.renderable_inst.layer_mask = layer_mask;
 }
 
 void
 sehle_renderable_list_release (SehleRenderableList *list)
 {
-	az_instance_finalize (list, SEHLE_TYPE_RENDERABLE_LIST);
+	az_instance_finalize_by_type (list, SEHLE_TYPE_RENDERABLE_LIST);
 }
 
 void

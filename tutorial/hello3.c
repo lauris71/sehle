@@ -107,7 +107,7 @@ create_platform(SehleStaticMesh *mesh, SehleEngine *engine)
     /* Assign created buffers to vertex array */
     SehleVertexArray *va = sehle_vertex_array_new_from_buffers(engine, (const uint8_t *) "HelloCube", vbuf, ibuf);
 
-    az_instance_init(mesh, SEHLE_TYPE_STATIC_MESH);
+    az_instance_init_by_type(mesh, SEHLE_TYPE_STATIC_MESH);
     /* Bind static mesh to engine and set render layers */
     sehle_static_mesh_setup(mesh, engine, 1);
     /* Set up static mesh geometry and bounding box */
@@ -154,7 +154,7 @@ create_sphere(SehleStaticMesh *mesh, SehleEngine *engine)
     /* Assign created buffers to vertex array */
     SehleVertexArray *va = sehle_vertex_array_new_from_buffers(engine, (const uint8_t *) "HelloCube", vbuf, ibuf);
 
-    az_instance_init(mesh, SEHLE_TYPE_STATIC_MESH);
+    az_instance_init_by_type(mesh, SEHLE_TYPE_STATIC_MESH);
     /* Bind static mesh to engine and set render layers */
     sehle_static_mesh_setup(mesh, engine, 1);
     /* Set up static mesh geometry and bounding box */
@@ -316,7 +316,7 @@ main(int argc, const char **argv)
      * As it is stack-allocated object we have to call instance_init to set it up
      */
     SehleStaticMesh mesh;
-    az_instance_init(&mesh, SEHLE_TYPE_STATIC_MESH);
+    az_instance_init_by_type(&mesh, SEHLE_TYPE_STATIC_MESH);
     /* Bind static mesh to engine and set render layers */
     sehle_static_mesh_setup(&mesh, engine, 1);
     /* Set up static mesh geometry and bounding box */
@@ -388,8 +388,8 @@ main(int argc, const char **argv)
      */
     SehleDirectionalLightImplementation dirl_impl;
     SehleDirectionalLightInstance dirl_inst;
-    az_implementation_init((AZImplementation *) &dirl_impl, SEHLE_TYPE_DIRECTIONAL_LIGHT);
-    az_interface_init((AZImplementation *) &dirl_impl, &dirl_inst);
+    az_implementation_init_by_type((AZImplementation *) &dirl_impl, SEHLE_TYPE_DIRECTIONAL_LIGHT);
+    az_instance_init((AZImplementation *) &dirl_impl, &dirl_inst);
     sehle_directional_light_setup(&dirl_inst, engine, 0, 0);
     dirl_inst.light_inst.ambient = EleaColor4fBlack;
     dirl_inst.light_inst.diffuse = EleaColor4fBlue;
@@ -400,8 +400,8 @@ main(int argc, const char **argv)
 
     SehlePointLightImplementation point_impl;
     SehlePointLightInstance point_inst;
-    az_implementation_init((AZImplementation *) &point_impl, SEHLE_TYPE_POINT_LIGHT);
-    az_interface_init((AZImplementation *) &point_impl, &point_inst);
+    az_implementation_init_by_type((AZImplementation *) &point_impl, SEHLE_TYPE_POINT_LIGHT);
+    az_instance_init((AZImplementation *) &point_impl, &point_inst);
     sehle_point_light_setup(&point_inst, engine, 0);
     point_inst.light_inst.ambient = elea_color4f_div(EleaColor4fRed, 5);
     point_inst.light_inst.diffuse = EleaColor4fRed;
@@ -414,8 +414,8 @@ main(int argc, const char **argv)
 
     SehleSpotLightImplementation spot_impl;
     SehleSpotLightInstance spot_inst;
-    az_implementation_init((AZImplementation *) &spot_impl, SEHLE_TYPE_SPOT_LIGHT);
-    az_interface_init((AZImplementation *) &spot_impl, &spot_inst);
+    az_implementation_init_by_type((AZImplementation *) &spot_impl, SEHLE_TYPE_SPOT_LIGHT);
+    az_instance_init((AZImplementation *) &spot_impl, &spot_inst);
     sehle_spot_light_setup(&spot_inst, engine, 0);
     spot_inst.light_inst.ambient = elea_color4f_div(EleaColor4fGreen, 5);
     spot_inst.light_inst.diffuse = EleaColor4fGreen;

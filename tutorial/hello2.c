@@ -52,7 +52,7 @@ static int height = 600;
 static void
 create_platform(SehleStaticMesh *mesh, SehleEngine *engine)
 {
-    az_instance_init(mesh, SEHLE_TYPE_STATIC_MESH);
+    az_instance_init_by_type(mesh, SEHLE_TYPE_STATIC_MESH);
     sehle_static_mesh_setup(mesh, engine, LAYER_SCENE);
     /* Use pre-built flat rectangle as geometry */
     SehleVertexArray *va = sehle_engine_get_standard_geometry(engine, SEHLE_GEOMETRY_GRID_8x8);
@@ -86,7 +86,7 @@ create_platform(SehleStaticMesh *mesh, SehleEngine *engine)
 static void
 create_cube(SehleStaticMesh *mesh, SehleEngine *engine, EleaVec3f pos)
 {
-    az_instance_init(mesh, SEHLE_TYPE_STATIC_MESH);
+    az_instance_init_by_type(mesh, SEHLE_TYPE_STATIC_MESH);
     sehle_static_mesh_setup(mesh, engine, LAYER_SCENE);
     /* Use pre-built flat rectangle as geometry */
     SehleVertexArray *va = sehle_engine_get_standard_geometry(engine, SEHLE_GEOMETRY_UNIT_CUBE_OUTSIDE);
@@ -225,8 +225,8 @@ main(int argc, const char **argv)
      */
     SehleDirectionalLightImplementation dirl_impl;
     SehleDirectionalLightInstance dirl_inst;
-    az_implementation_init((AZImplementation *) &dirl_impl, SEHLE_TYPE_DIRECTIONAL_LIGHT);
-    az_interface_init((AZImplementation *) &dirl_impl, &dirl_inst);
+    az_implementation_init_by_type((AZImplementation *) &dirl_impl, SEHLE_TYPE_DIRECTIONAL_LIGHT);
+    az_instance_init((AZImplementation *) &dirl_impl, &dirl_inst);
     sehle_directional_light_setup(&dirl_inst, engine, 0, 0);
     /* Set diffuse color */
     dirl_inst.light_inst.diffuse = EleaColor4fBlue;
@@ -237,8 +237,8 @@ main(int argc, const char **argv)
     EleaVec3f point_pos = {5, -5, 2};
     SehlePointLightImplementation point_impl;
     SehlePointLightInstance point_inst;
-    az_implementation_init((AZImplementation *) &point_impl, SEHLE_TYPE_POINT_LIGHT);
-    az_interface_init((AZImplementation *) &point_impl, &point_inst);
+    az_implementation_init_by_type((AZImplementation *) &point_impl, SEHLE_TYPE_POINT_LIGHT);
+    az_instance_init((AZImplementation *) &point_impl, &point_inst);
     sehle_point_light_setup(&point_inst, engine, 0);
     /* Set ambient and diffuse color */
     point_inst.light_inst.ambient = elea_color4f_div(EleaColor4fRed, 3);
@@ -262,8 +262,8 @@ main(int argc, const char **argv)
     EleaVec3f spot_pos = {-2, 2, 4};
     SehleSpotLightImplementation spot_impl;
     SehleSpotLightInstance spot_inst;
-    az_implementation_init((AZImplementation *) &spot_impl, SEHLE_TYPE_SPOT_LIGHT);
-    az_interface_init((AZImplementation *) &spot_impl, &spot_inst);
+    az_implementation_init_by_type((AZImplementation *) &spot_impl, SEHLE_TYPE_SPOT_LIGHT);
+    az_instance_init((AZImplementation *) &spot_impl, &spot_inst);
     sehle_spot_light_setup(&spot_inst, engine, 0);
     spot_inst.light_inst.ambient = elea_color4f_div(EleaColor4fGreen, 3);
     spot_inst.light_inst.diffuse = EleaColor4fGreen;
