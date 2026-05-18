@@ -31,7 +31,7 @@ static SehleShader *
 dns_get_shader (SehleEngine *engine, unsigned int shader_type, unsigned int flags, unsigned int output)
 {
 	char c[256];
-	sprintf (c, "Sehle::DNSProgram::%s_C%dD%dN%dS%dA%dB%d_O%d",
+	snprintf (c, 256, "Sehle::DNSProgram::%s_C%dD%dN%dS%dA%dB%d_O%d",
 		(shader_type == SEHLE_SHADER_VERTEX) ? "Vertex" : "Fragment",
 		(flags & SEHLE_PROGRAM_DNS_HAS_COLORS) != 0,
 		(flags & SEHLE_PROGRAM_DNS_HAS_DIFFUSE) != 0,
@@ -44,7 +44,7 @@ dns_get_shader (SehleEngine *engine, unsigned int shader_type, unsigned int flag
 	if (!sehle_resource_is_initialized (&shader->resource)) {
 		static const char *outputs[] = { "GBUFFER", "FORWARD", "DENSITY" };
 		const char *sources[1];
-		sprintf (c, "#version 140\n"
+		snprintf (c, 256, "#version 140\n"
 			"#define %s\n"
 			"#define HAS_COLORS %d\n"
 			"#define HAS_DIFFUSE_TEXTURE %d\n"
@@ -80,7 +80,7 @@ SehleProgram *
 sehle_program_dns_get_reference (SehleEngine *engine, unsigned int flags, unsigned int output)
 {
 	char c[256];
-	sprintf (c, "Sehle::DNSProgram_C%dD%dN%dS%dA%dB%d_O%d",
+	snprintf (c, 256, "Sehle::DNSProgram_C%dD%dN%dS%dA%dB%d_O%d",
 		(flags & SEHLE_PROGRAM_DNS_HAS_COLORS) != 0,
 		(flags & SEHLE_PROGRAM_DNS_HAS_DIFFUSE) != 0,
 		(flags & SEHLE_PROGRAM_DNS_HAS_NORMAL) != 0,

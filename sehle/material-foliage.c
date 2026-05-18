@@ -31,7 +31,7 @@ static SehleShader *
 foliage_get_shader (SehleEngine *engine, unsigned int shader_type, unsigned int flags, unsigned int max_instances)
 {
 	char c[256];
-	sprintf (c, "Sehle::FoliageProgram::%s_N%uAO%uW%u_I%u",
+	snprintf (c, 256, "Sehle::FoliageProgram::%s_N%uAO%uW%u_I%u",
 		(shader_type == SEHLE_SHADER_VERTEX) ? "Vertex" : "Fragment",
 		(flags & SEHLE_PROGRAM_FOLIAGE_HAS_NORMAL) != 0,
 		(flags & SEHLE_PROGRAM_FOLIAGE_HAS_AMBIENT_OCCLUSION) != 0,
@@ -40,7 +40,7 @@ foliage_get_shader (SehleEngine *engine, unsigned int shader_type, unsigned int 
 	SehleShader *shader = sehle_engine_get_shader (engine, c, shader_type);
 	if (!sehle_resource_is_initialized (&shader->resource)) {
 		const char *sources[1];
-		sprintf (c, "#version 140\n"
+		snprintf (c, 256, "#version 140\n"
 			"#define %s\n"
 			"#define MAX_INSTANCES %u\n"
 			"#define HAS_NORMAL %u\n"
@@ -65,7 +65,7 @@ SehleProgram *
 sehle_program_foliage_get_reference (SehleEngine *engine, unsigned int flags, unsigned int max_instances)
 {
 	char c[256];
-	sprintf (c, "Sehle::FoliageProgram_N%uAO%uW%u_I%u",
+	snprintf (c, 256, "Sehle::FoliageProgram_N%uAO%uW%u_I%u",
 		(flags & SEHLE_PROGRAM_FOLIAGE_HAS_NORMAL) != 0,
 		(flags & SEHLE_PROGRAM_FOLIAGE_HAS_AMBIENT_OCCLUSION) != 0,
 		(flags & SEHLE_PROGRAM_FOLIAGE_HAS_WIND) != 0,

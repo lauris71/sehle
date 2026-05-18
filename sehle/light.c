@@ -33,7 +33,7 @@ static SehleShader *
 light_get_shader (SehleEngine *engine, unsigned int shader_type, unsigned int flags, unsigned int num_splits)
 {
 	char c[256];
-	sprintf (c, "Sehle::Light::%s_D%dP%dS%dS%dD%dS%d",
+	snprintf (c, 256, "Sehle::Light::%s_D%dP%dS%dS%dD%dS%d",
 		(shader_type == SEHLE_SHADER_VERTEX) ? "Vertex" : "Fragment",
 		(flags & SEHLE_PROGRAM_LIGHT_DIRECTIONAL) != 0,
 		(flags & SEHLE_PROGRAM_LIGHT_POINT) != 0,
@@ -44,7 +44,7 @@ light_get_shader (SehleEngine *engine, unsigned int shader_type, unsigned int fl
 	SehleShader *shader = sehle_engine_get_shader (engine, c, shader_type);
 	if (!sehle_resource_is_initialized (&shader->resource)) {
 		const char *sources[1];
-		sprintf (c, "#version 140\n#define %s\n#define DIRECTIONAL %d\n#define POINT %d\n#define SPOT %d\n#define HAS_SHADOW %d\n#define HAS_DENSITY %d\n#define NUM_SPLITS %d\n",
+		snprintf (c, 256, "#version 140\n#define %s\n#define DIRECTIONAL %d\n#define POINT %d\n#define SPOT %d\n#define HAS_SHADOW %d\n#define HAS_DENSITY %d\n#define NUM_SPLITS %d\n",
 			(shader_type == SEHLE_SHADER_VERTEX) ? "VS" : "FS",
 			(flags & SEHLE_PROGRAM_LIGHT_DIRECTIONAL) != 0,
 			(flags & SEHLE_PROGRAM_LIGHT_POINT) != 0,
@@ -69,7 +69,7 @@ sehle_program_light_get_reference (SehleEngine *engine, unsigned int flags, unsi
 	arikkei_return_val_if_fail ((flags & SEHLE_PROGRAM_LIGHT_DIRECTIONAL) || !num_splits, NULL);
 	if (!(flags & (SEHLE_PROGRAM_LIGHT_HAS_SHADOW | SEHLE_PROGRAM_LIGHT_HAS_DENSITY))) num_splits = 0;
 	char c[256];
-	sprintf (c, "Sehle::Light_D%dP%dS%dS%dD%dS%d",
+	snprintf (c, 256, "Sehle::Light_D%dP%dS%dS%dD%dS%d",
 		(flags & SEHLE_PROGRAM_LIGHT_DIRECTIONAL) != 0,
 		(flags & SEHLE_PROGRAM_LIGHT_POINT) != 0,
 		(flags & SEHLE_PROGRAM_LIGHT_SPOT) != 0,

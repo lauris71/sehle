@@ -26,7 +26,7 @@ static SehleShader *
 overlay_get_shader (SehleEngine *engine, unsigned int shader_type, unsigned int flags, float min_alpha)
 {
 	char c[256];
-	sprintf (c, "Sehle::OverlayProgram::%s_T%uC%uM%uD%uE%uA%.3f",
+	snprintf (c, 256, "Sehle::OverlayProgram::%s_T%uC%uM%uD%uE%uA%.3f",
 		(shader_type == SEHLE_SHADER_VERTEX) ? "Vertex" : "Fragment",
 		(flags & SEHLE_PROGRAM_OVERLAY_HAS_TEXTURE) != 0,
 		(flags & SEHLE_PROGRAM_OVERLAY_HAS_COLORS) != 0,
@@ -37,7 +37,7 @@ overlay_get_shader (SehleEngine *engine, unsigned int shader_type, unsigned int 
 	SehleShader *shader = sehle_engine_get_shader (engine, c, shader_type);
 	if (!sehle_resource_is_initialized (&shader->resource)) {
 		const char *sources[1];
-		sprintf (c, "#version 140\n"
+		snprintf (c, 256, "#version 140\n"
 			"#define %s\n"
 			"#define HAS_TEXTURE %u\n"
 			"#define HAS_COLORS %u\n"
@@ -71,7 +71,7 @@ SehleProgram *
 sehle_program_overlay_get_reference (SehleEngine *engine, unsigned int flags, float min_alpha)
 {
 	char c[256];
-	sprintf (c, "Sehle::OverlayProgram_T%uC%uM%uD%uE%uA%.3f",
+	snprintf (c, 256, "Sehle::OverlayProgram_T%uC%uM%uD%uE%uA%.3f",
 		(flags & SEHLE_PROGRAM_OVERLAY_HAS_TEXTURE) != 0,
 		(flags & SEHLE_PROGRAM_OVERLAY_HAS_COLORS) != 0,
 		(flags & SEHLE_PROGRAM_OVERLAY_HAS_MASK) != 0,

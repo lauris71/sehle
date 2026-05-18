@@ -50,12 +50,12 @@ static SehleShader *
 sky_get_shader (SehleEngine *engine, unsigned int shader_type)
 {
 	char c[256];
-	sprintf (c, "Sehle::Sky::%s",
+	snprintf (c, 256, "Sehle::Sky::%s",
 		(shader_type == SEHLE_SHADER_VERTEX) ? "Vertex" : "Fragment");
 	SehleShader *shader = sehle_engine_get_shader (engine, c, shader_type);
 	if (!sehle_resource_is_initialized (&shader->resource)) {
 		const char *sources[1];
-		sprintf (c, "#version 140\n#define %s\n",
+		snprintf (c, 256, "#version 140\n#define %s\n",
 			(shader_type == SEHLE_SHADER_VERTEX) ? "VS" : "FS");
 		sources[0] = (shader_type == SEHLE_SHADER_VERTEX) ? "sky-vertex.txt" : "sky-fragment.txt";
 		sehle_shader_build_from_header_files (shader, (const unsigned char *) c, -1, (const unsigned char **) sources, 1);
@@ -67,7 +67,7 @@ SehleProgram *
 sehle_program_sky_get_reference (SehleEngine *engine)
 {
 	char c[256];
-	sprintf (c, "Sehle::Sky");
+	snprintf (c, 256, "Sehle::Sky");
 	SehleProgram *prog = sehle_engine_get_program (engine, c, 1, 1, SEHLE_SKY_NUM_UNIFORMS);
 	if (!sehle_resource_is_initialized (&prog->resource)) {
 		sehle_program_add_shader (prog, sky_get_shader (engine, SEHLE_SHADER_VERTEX));

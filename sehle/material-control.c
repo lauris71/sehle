@@ -28,7 +28,7 @@ static SehleShader *
 control_get_shader (SehleEngine *engine, unsigned int shader_type, unsigned int flags, unsigned int n_lights)
 {
 	char c[256];
-	sprintf (c, "Sehle::ControlProgram::%s_C%uT%u_L%u",
+	snprintf (c, 256,"Sehle::ControlProgram::%s_C%uT%u_L%u",
 		(shader_type == SEHLE_SHADER_VERTEX) ? "Vertex" : "Fragment",
 		(flags & SEHLE_PROGRAM_CONTROL_HAS_COLORS) != 0,
 		(flags & SEHLE_PROGRAM_CONTROL_HAS_TEXTURE) != 0,
@@ -36,7 +36,7 @@ control_get_shader (SehleEngine *engine, unsigned int shader_type, unsigned int 
 	SehleShader *shader = sehle_engine_get_shader (engine, c, shader_type);
 	if (!sehle_resource_is_initialized (&shader->resource)) {
 		const char *sources[1];
-		sprintf (c, "#version 140\n#define %s\n#define NUM_LIGHTS %u\n#define HAS_COLORS %u\n#define HAS_TEXTURE %u\n",
+		snprintf (c, 256, "#version 140\n#define %s\n#define NUM_LIGHTS %u\n#define HAS_COLORS %u\n#define HAS_TEXTURE %u\n",
 			(shader_type == SEHLE_SHADER_VERTEX) ? "VS" : "FS",
 			n_lights,
 			(flags & SEHLE_PROGRAM_CONTROL_HAS_COLORS) != 0,
@@ -55,7 +55,7 @@ SehleProgram *
 sehle_program_control_get_reference (SehleEngine *engine, unsigned int flags, unsigned int n_lights)
 {
 	char c[256];
-	sprintf (c, "Sehle::ControlProgram_C%uT%u_L%u",
+	snprintf (c, 256, "Sehle::ControlProgram_C%uT%u_L%u",
 		(flags & SEHLE_PROGRAM_CONTROL_HAS_COLORS) != 0,
 		(flags & SEHLE_PROGRAM_CONTROL_HAS_TEXTURE) != 0,
 		n_lights);

@@ -53,14 +53,14 @@ static SehleShader *
 water_get_shader (SehleEngine *engine, unsigned int shader_type, unsigned int flags, unsigned int num_ripples)
 {
 	char c[256];
-	sprintf (c, "Sehle::Water::%s_D%uNR%u",
+	snprintf (c, 256, "Sehle::Water::%s_D%uNR%u",
 		(shader_type == SEHLE_SHADER_VERTEX) ? "Vertex" : "Fragment",
 		(flags & SEHLE_PROGRAM_WATER_HAS_DEPTH) != 0,
 		num_ripples);
 	SehleShader *shader = sehle_engine_get_shader (engine, c, shader_type);
 	if (!sehle_resource_is_initialized (&shader->resource)) {
 		const char *sources[1];
-		sprintf (c, "#version 140\n#define %s\n#define DEPTH %d\n#define NUM_RIPPLES %u\n",
+		snprintf (c, 256, "#version 140\n#define %s\n#define DEPTH %d\n#define NUM_RIPPLES %u\n",
 			(shader_type == SEHLE_SHADER_VERTEX) ? "VS" : "FS",
 			(flags & SEHLE_PROGRAM_WATER_HAS_DEPTH) != 0,
 			num_ripples);
@@ -74,7 +74,7 @@ SehleProgram *
 sehle_program_water_get_reference (SehleEngine *engine, unsigned int flags, unsigned int num_ripples)
 {
 	char c[256];
-	sprintf (c, "Sehle::Water::D%uNR%u",
+	snprintf (c, 256, "Sehle::Water::D%uNR%u",
 		(flags & SEHLE_PROGRAM_WATER_HAS_DEPTH) != 0,
 		num_ripples);
 	SehleProgram *prog = sehle_engine_get_program (engine, c, 1, 1, SEHLE_WATER_NUM_UNIFORMS);

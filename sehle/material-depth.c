@@ -25,12 +25,12 @@ SehleShader *
 depth_get_vertex_shader (SehleEngine *engine, unsigned int has_texture)
 {
 	char c[256];
-	sprintf (c, "Sehle::DepthProgram::Vertex_T%d", has_texture != 0);
+	snprintf (c, 256, "Sehle::DepthProgram::Vertex_T%d", has_texture != 0);
 	SehleShader *shader = sehle_engine_get_shader (engine, c, SEHLE_SHADER_VERTEX);
 	if (!sehle_resource_is_initialized (&shader->resource)) {
 		const unsigned char *sources[2];
 		unsigned int size, is_file;
-		sprintf (c, "#version 140\n#define VS\n#define HAS_TEXTURE %d\n", has_texture);
+		snprintf (c, 256, "#version 140\n#define VS\n#define HAS_TEXTURE %d\n", has_texture);
 		sources[0] = (const unsigned char *) c;
 		sources[1] = sehle_shader_map ((const unsigned char *) "depth-vertex.txt", &size, &is_file);
 		sehle_shader_build (shader, sources, 2, NULL);
@@ -43,12 +43,12 @@ SehleShader *
 depth_get_fragment_shader (SehleEngine *engine, unsigned int has_texture)
 {
 	char c[256];
-	sprintf (c, "Sehle::DepthProgram::Fragment_T%d", has_texture != 0);
+	snprintf (c, 256, "Sehle::DepthProgram::Fragment_T%d", has_texture != 0);
 	SehleShader *shader = sehle_engine_get_shader (engine, c, SEHLE_SHADER_FRAGMENT);
 	if (!sehle_resource_is_initialized (&shader->resource)) {
 		const unsigned char *sources[2];
 		unsigned int size, is_file;
-		sprintf (c, "#version 140\n#define FS\n#define HAS_TEXTURE %d\n", has_texture);
+		snprintf (c, 256, "#version 140\n#define FS\n#define HAS_TEXTURE %d\n", has_texture);
 		sources[0] = (const unsigned char *) c;
 		sources[1] = sehle_shader_map ((const unsigned char *) "depth-fragment.txt", &size, &is_file);
 		sehle_shader_build (shader, sources, 2, NULL);
@@ -61,7 +61,7 @@ static SehleShader *
 depth_get_shader (SehleEngine *engine, unsigned int shader_type, unsigned int flags, unsigned int max_instances)
 {
 	char c[256];
-	sprintf (c, "Sehle::DepthProgram::%s_C%uT%uB%u_I%u",
+	snprintf (c, 256, "Sehle::DepthProgram::%s_C%uT%uB%u_I%u",
 		(shader_type == SEHLE_SHADER_VERTEX) ? "Vertex" : "Fragment",
 		(flags & SEHLE_PROGRAM_DEPTH_HAS_COLORS) != 0,
 		(flags & SEHLE_PROGRAM_DEPTH_HAS_TEXTURE) != 0,
@@ -70,7 +70,7 @@ depth_get_shader (SehleEngine *engine, unsigned int shader_type, unsigned int fl
 	SehleShader *shader = sehle_engine_get_shader (engine, c, shader_type);
 	if (!sehle_resource_is_initialized (&shader->resource)) {
 		const char *sources[1];
-		sprintf (c, "#version 140\n"
+		snprintf (c, 256, "#version 140\n"
 			"#define %s\n"
 			"#define HAS_COLORS %u\n"
 			"#define HAS_TEXTURE %u\n"
@@ -91,7 +91,7 @@ SehleProgram *
 sehle_depth_program_get_reference (SehleEngine *engine, unsigned int flags, unsigned int max_instances)
 {
 	char c[256];
-	sprintf (c, "Sehle::DepthProgram_C%uT%uB%u_I%u",
+	snprintf (c, 256, "Sehle::DepthProgram_C%uT%uB%u_I%u",
 		(flags & SEHLE_PROGRAM_DEPTH_HAS_COLORS) != 0,
 		(flags & SEHLE_PROGRAM_DEPTH_HAS_TEXTURE) != 0,
 		(flags & SEHLE_PROGRAM_DEPTH_HAS_BONES) != 0,

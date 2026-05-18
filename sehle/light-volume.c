@@ -44,12 +44,12 @@ static SehleShader *
 light_volume_get_shader (SehleEngine *engine, unsigned int shader_type, unsigned int program)
 {
 	char c[256];
-	sprintf (c, "Sehle::LightVolume::%s",
+	snprintf (c, 256, "Sehle::LightVolume::%s",
 		(shader_type == SEHLE_SHADER_VERTEX) ? "Vertex" : "Fragment");
 	SehleShader *shader = sehle_engine_get_shader (engine, c, shader_type);
 	if (sehle_resource_get_sate (&shader->resource) == SEHLE_RESOURCE_STATE_CREATED) {
 		const char *sources[1];
-		sprintf (c, "#version 140\n#define %s\n",
+		snprintf (c, 256, "#version 140\n#define %s\n",
 			(shader_type == SEHLE_SHADER_VERTEX) ? "VS" : "FS");
 		if (shader_type == SEHLE_SHADER_VERTEX) {
 			sources[0] = (program == SEHLE_LIGHT_VOLUME_PROGRAM_STENCIL) ? "light-vertex.txt" : "gbuf-ssao-vertex.txt";
@@ -65,7 +65,7 @@ SehleProgram *
 sehle_program_light_volume_get_reference (SehleEngine *engine, unsigned int program)
 {
 	char c[256];
-	sprintf (c, "Sehle::LightVolume");
+	snprintf (c, 256, "Sehle::LightVolume");
 	SehleProgram *prog = sehle_engine_get_program (engine, c, 1, 2, SEHLE_LIGHT_VOLUME_NUM_UNIFORMS);
 	if (sehle_resource_get_sate (&prog->resource) == SEHLE_RESOURCE_STATE_CREATED) {
 		sehle_program_add_shader (prog, light_volume_get_shader (engine, SEHLE_SHADER_VERTEX, program));

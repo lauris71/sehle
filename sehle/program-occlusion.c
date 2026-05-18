@@ -20,13 +20,13 @@ static SehleShader *
 occlusion_get_shader (SehleEngine *engine, unsigned int shader_type, unsigned int flags, unsigned int max_instances)
 {
 	char c[256];
-	sprintf (c, "Sehle::OcclusionProgram::%s__I%u",
+	snprintf (c, 256, "Sehle::OcclusionProgram::%s__I%u",
 		(shader_type == SEHLE_SHADER_VERTEX) ? "Vertex" : "Fragment",
 		max_instances);
 	SehleShader *shader = sehle_engine_get_shader (engine, c, shader_type);
 	if (!sehle_resource_is_initialized (&shader->resource)) {
 		const char *sources[1];
-		sprintf (c, "#version 140\n"
+		snprintf (c, 256, "#version 140\n"
 			"#define %s\n"
 			"#define MAX_INSTANCES %u\n",
 			(shader_type == SEHLE_SHADER_VERTEX) ? "VS" : "FS",
@@ -48,7 +48,7 @@ SehleProgram *
 sehle_program_occlusion_get_reference (SehleEngine *engine, unsigned int flags, unsigned int max_instances)
 {
 	char c[256];
-	sprintf (c, "Sehle::OcclusionProgram__I%u",
+	snprintf (c, 256, "Sehle::OcclusionProgram__I%u",
 		max_instances);
 	SehleProgram *prog = sehle_engine_get_program (engine, c, 1, 2, SEHLE_OCCLUSION_NUM_UNIFORMS);
 	if (!sehle_resource_is_initialized (&prog->resource)) {

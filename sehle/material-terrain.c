@@ -27,14 +27,14 @@ static SehleShader *
 terrain_get_shader (SehleEngine *engine, unsigned int shader_type, unsigned int flags)
 {
 	char c[256];
-	sprintf (c, "Sehle::TerrainProgram::%s_M%uN%u",
+	snprintf (c, 256, "Sehle::TerrainProgram::%s_M%uN%u",
 		(shader_type == SEHLE_SHADER_VERTEX) ? "Vertex" : "Fragment",
 		(flags & SEHLE_PROGRAM_TERRAIN_HAS_MAP_1) != 0,
 		(flags & SEHLE_PROGRAM_TERRAIN_NOISE) != 0);
 	SehleShader *shader = sehle_engine_get_shader (engine, c, shader_type);
 	if (!sehle_resource_is_initialized (&shader->resource)) {
 		const char *sources[1];
-		sprintf (c, "#version 140\n"
+		snprintf (c, 256, "#version 140\n"
 			"#define %s\n"
 			"#define MAP_1 %u\n"
 			"#define NOISE %u\n",
@@ -55,7 +55,7 @@ SehleProgram *
 sehle_program_terrain_get_reference (SehleEngine *engine, unsigned int flags)
 {
 	char c[256];
-	sprintf (c, "Sehle::TerrainProgram_M%uN%u",
+	snprintf (c, 256, "Sehle::TerrainProgram_M%uN%u",
 		(flags & SEHLE_PROGRAM_TERRAIN_HAS_MAP_1) != 0,
 		(flags & SEHLE_PROGRAM_TERRAIN_HAS_NOISE) != 0);
 	SehleProgram *prog = sehle_engine_get_program (engine, c, 1, 2, SEHLE_PROGRAM_TERRAIN_NUM_UNIFORMS);

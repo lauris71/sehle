@@ -38,15 +38,16 @@ sehle_resource_manager_get_type (void)
 static unsigned int
 resource_hash (const void *key)
 {
-	SehleResource *res = (SehleResource *) key;
-	return arikkei_string_hash (res->id) ^ arikkei_int32_hash (ARIKKEI_INT_TO_POINTER(AZ_CLASS_TYPE(&res->active_object.object.klass->reference_klass.klass)));
+	SehleResource *res = *((SehleResource **) key);
+	unsigned int type = AZ_CLASS_TYPE(&res->active_object.object.klass->reference_klass.klass);
+	return arikkei_string_hash(&res->id) ^ arikkei_int32_hash (&type);
 }
 
 static unsigned int
 resource_equal (const void *lhs, const void *rhs)
 {
-	SehleResource *lres = (SehleResource *) lhs;
-	SehleResource *rres = (SehleResource *) rhs;
+	SehleResource *lres = *((SehleResource **) lhs);
+	SehleResource *rres = *((SehleResource **) rhs);
 	return (lres->active_object.object.klass == rres->active_object.object.klass) && !strcmp ((const char *) lres->id, (const char *) rres->id);
 }
 
@@ -77,35 +78,35 @@ static unsigned int
 lookup_hash (const void *key)
 {
 	struct Lookup *lookup = (struct Lookup *) key;
-	return arikkei_string_hash (lookup->key) ^ arikkei_int32_hash (ARIKKEI_INT_TO_POINTER(lookup->type));
+	return arikkei_string_hash (&lookup->key) ^ arikkei_int32_hash(&lookup->type);
 }
 
 static unsigned int
 lookup_equal (const void *lhs, const void *rhs)
 {
 	struct Lookup *lookup = (struct Lookup *) lhs;
-	SehleResource *res = (SehleResource *) rhs;
+	SehleResource *res = *((SehleResource **) rhs);
 	return (lookup->type == AZ_CLASS_TYPE(&res->active_object.object.klass->reference_klass.klass)) && !strcmp ((const char *) lookup->key, (const char *) res->id);
 }
 
 SehleResource *
 sehle_resource_manager_lookup (SehleResourceManager *manager, unsigned int type, const unsigned char *key)
 {
-	struct Lookup lookup;
-	lookup.key = key;
-	lookup.type = type;
-	return (SehleResource *) arikkei_dict_lookup_foreign (&manager->instance_dict, &lookup, lookup_hash, lookup_equal);
+	struct Lookup lookup = {type, key};
+	void **ptr = (void **) arikkei_dict_lookup_foreign (&manager->instance_dict, &lookup, lookup_hash(&lookup), lookup_equal);
+	if (!ptr) return NULL;
+	return (SehleResource *) *ptr;
 }
 
 void
 sehle_resource_manager_add_resource (SehleResourceManager *manager, SehleResource *res, unsigned int replace)
 {
-	SehleResource *old = (SehleResource *) arikkei_dict_lookup (&manager->instance_dict, res);
-	if (old) {
+	SehleResource **ptr = (SehleResource **) arikkei_dict_lookup(&manager->instance_dict, &res);
+	if (ptr) {
 		if (!replace) return;
-		arikkei_dict_remove (&manager->instance_dict, old);
+		arikkei_dict_remove_pval (&manager->instance_dict, *ptr);
 	}
-	arikkei_dict_insert (&manager->instance_dict, res, res);
+	arikkei_dict_insert_pval (&manager->instance_dict, res, res);
 }
 
 void
@@ -114,6 +115,6 @@ sehle_resource_manager_remove_resource (SehleResourceManager *manager, SehleReso
 	arikkei_return_if_fail (manager != NULL);
 	arikkei_return_if_fail (res != NULL);
 	arikkei_return_if_fail (SEHLE_IS_RESOURCE (res));
-	arikkei_dict_remove (&manager->instance_dict, res);
+	arikkei_dict_remove_pval (&manager->instance_dict, res);
 }
 
