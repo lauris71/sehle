@@ -103,6 +103,7 @@ sehle_light_get_type (void)
 	if (!type) {
 		az_register_interface_type (&type, (const unsigned char *) "SehleLight", SEHLE_TYPE_RENDERABLE,
 			sizeof (SehleLightClass), sizeof (SehleLightImplementation), sizeof (SehleLightInstance), 0,
+			1, 0,
 			(void (*) (AZClass *)) light_class_init,
 			(void (*) (AZImplementation *)) light_implementation_init,
 			(void (*) (const AZImplementation *, void *)) light_instance_init,
@@ -114,8 +115,6 @@ sehle_light_get_type (void)
 static void
 light_class_init (SehleLightClass *klass)
 {
-	az_class_set_num_interfaces ((AZClass *) klass, 1);
-	/* Material */
 	az_class_declare_interface ((AZClass *) klass, 0, SEHLE_TYPE_MATERIAL,
 		ARIKKEI_OFFSET(SehleLightImplementation, material_impl),
 		ARIKKEI_OFFSET(SehleLightInstance, material_inst));

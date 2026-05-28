@@ -47,6 +47,7 @@ sehle_shader_get_type (void)
 	static unsigned int type = 0;
 	if (!type) {
 		az_register_type (&type, (const unsigned char *) "SehleShader", SEHLE_TYPE_RESOURCE, sizeof (SehleShaderClass), sizeof (SehleShader), 0,
+			0, 0,
 			(void (*) (AZClass *)) shader_class_init,
 			NULL,
 			(void (*) (const AZImplementation *, void *)) shader_finalize);

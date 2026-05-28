@@ -34,6 +34,7 @@ sehle_texture_cube_map_get_type (void)
 	static unsigned int type = 0;
 	if (!type) {
 		az_register_type (&type, (const unsigned char *) "SehleTextureCubeMap", SEHLE_TYPE_TEXTURE, sizeof (SehleTextureCubeMapClass), sizeof (SehleTextureCubeMap), 0,
+			0, 0,
 			(void (*) (AZClass *)) texture_cubemap_class_init,
 			(void (*) (const AZImplementation *, void *)) texture_cubemap_init,
 			(void (*) (const AZImplementation *, void *)) texture_cubemap_finalize);

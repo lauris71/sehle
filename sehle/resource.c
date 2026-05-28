@@ -29,6 +29,7 @@ sehle_resource_get_type (void)
 	static unsigned int type = 0;
 	if (!type) {
 		AZClass *klass = az_register_type (&type, (const unsigned char *) "SehleResource", AZ_TYPE_ACTIVE_OBJECT, sizeof (SehleResourceClass), sizeof (SehleResource), AZ_FLAG_ABSTRACT,
+			0, 0,
 			(void (*) (AZClass *)) resource_class_init,
 			NULL, NULL);
 		parent_class = (AZActiveObjectClass *) az_class_parent(klass);

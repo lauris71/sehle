@@ -27,6 +27,7 @@ sehle_resource_manager_get_type (void)
 {
 	if (!resource_manager_type) {
 		az_register_type (&resource_manager_type, (const unsigned char *) "SehleResourcemanager", AZ_TYPE_BLOCK, sizeof (SehleResourceManagerClass), sizeof (SehleResourceManager), 0,
+			0, 0,
 			NULL,
 			(void (*) (const AZImplementation *, void *)) resource_manager_init,
 			(void (*) (const AZImplementation *, void *)) resource_manager_finalize);

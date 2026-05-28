@@ -38,6 +38,7 @@ sehle_vertex_array_get_type (void)
 	static unsigned int type = 0;
 	if (!type) {
 		AZClass *klass = az_register_type (&type, (const unsigned char *) "SehleVertexArray", SEHLE_TYPE_RESOURCE, sizeof (SehleVertexArrayClass), sizeof (SehleVertexArray), 0,
+			0, 0,
 			(void (*) (AZClass *)) vertex_array_class_init,
 			NULL, NULL);
 		parent_class = (SehleResourceClass *) az_class_parent(klass);

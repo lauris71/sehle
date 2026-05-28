@@ -94,6 +94,7 @@ sehle_light_volume_get_type (void)
 {
 	if (!sehle_light_volume_type) {
 		az_register_type (&sehle_light_volume_type, (const unsigned char *) "SehleLightVolume", AZ_TYPE_STRUCT, sizeof (SehleLightVolumeClass), sizeof (SehleLightVolume), AZ_FLAG_ZERO_MEMORY,
+			1, 0,
 			(void (*) (AZClass *)) light_volume_class_init,
 			(void (*) (const AZImplementation *, void *)) light_volume_init,
 			NULL);
@@ -105,7 +106,6 @@ sehle_light_volume_get_type (void)
 static void
 light_volume_class_init (SehleLightVolumeClass *klass)
 {
-	az_class_set_num_interfaces ((AZClass *) klass, 1);
 	az_class_declare_interface ((AZClass *) klass, 0, SEHLE_TYPE_LIGHT,
 		ARIKKEI_OFFSET(SehleLightVolumeClass, light_implementation),
 		ARIKKEI_OFFSET(SehleLightVolume, light_instance));

@@ -103,6 +103,7 @@ sehle_material_water_get_type (void)
 	if (!sehle_material_water_type) {
 		az_register_type (&sehle_material_water_type, (const unsigned char *) "SehleMaterialWater", AZ_TYPE_BLOCK,
 			sizeof (SehleMaterialWaterClass), sizeof (SehleMaterialWater), 0,
+			1, 0,
 			(void (*) (AZClass *)) material_water_class_init,
 			(void (*) (const AZImplementation *, void *)) material_water_init,
 			NULL);
@@ -114,7 +115,6 @@ sehle_material_water_get_type (void)
 static void
 material_water_class_init (SehleMaterialWaterClass *klass)
 {
-	az_class_set_num_interfaces ((AZClass *) klass, 1);
 	az_class_declare_interface ((AZClass *) klass, 0, SEHLE_TYPE_MATERIAL_REFLECTING,
 		ARIKKEI_OFFSET(SehleMaterialWaterClass, reflecting_impl),
 		ARIKKEI_OFFSET(SehleMaterialWater, reflecting_inst));

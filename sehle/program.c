@@ -59,6 +59,7 @@ sehle_program_get_type (void)
 {
 	if (!program_type) {
 		program_class = (SehleProgramClass *) az_register_type (&program_type, (const unsigned char *) "SehleProgram", SEHLE_TYPE_RESOURCE, sizeof (SehleProgramClass), sizeof (SehleProgram), 0,
+			0, 0,
 			(void (*) (AZClass *)) program_class_init,
 			(void (*) (const AZImplementation *, void *)) program_init,
 			(void (*) (const AZImplementation *, void *)) program_finalize);
@@ -130,7 +131,7 @@ link (SehleProgram *prog)
 	}
 
 	//glBindFragDataLocation (prog->gl_handle, 3, "occlusion_fragment");
-	for (unsigned int i = 0; i < prog->shaders.length; i++) {
+	for (unsigned int i = 0; i < prog->shaders.list.collection.size; i++) {
 		glAttachShader (prog->resource.gl_handle, sehle_resource_get_handle ((SehleResource *) prog->shaders.objects[i]));
 	}
 	glLinkProgram (prog->resource.gl_handle);
@@ -296,7 +297,7 @@ static void
 detach_all (SehleProgram *prog)
 {
 	if (prog->resource.gl_handle) {
-		for (unsigned int i = 0; i < prog->shaders.length; i++) {
+		for (unsigned int i = 0; i < prog->shaders.list.collection.size; i++) {
 			glDetachShader (prog->resource.gl_handle, ((SehleResource *) prog->shaders.objects[i])->gl_handle);
 			SEHLE_CHECK_ERRORS (0);
 		}

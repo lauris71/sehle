@@ -219,6 +219,7 @@ sehle_static_octree_get_type ()
 {
 	if (!sehle_static_octree_type) {
 		sehle_static_octree_class = (SehleStaticOctreeClass *) az_register_type (&sehle_static_octree_type, (const unsigned char *) "SehleStaticOctree", AZ_TYPE_STRUCT, sizeof (SehleStaticOctreeClass), sizeof (SehleStaticOctree), AZ_FLAG_ZERO_MEMORY,
+			1, 0,
 			(void (*) (AZClass *)) static_octree_class_init,
 			NULL,
 			(void (*) (const AZImplementation *, void *)) static_octree_finalize);
@@ -229,7 +230,6 @@ sehle_static_octree_get_type ()
 void
 static_octree_class_init (SehleStaticOctreeClass *klass)
 {
-	az_class_set_num_interfaces ((AZClass *) klass, 1);
 	az_class_declare_interface ((AZClass *) klass, 0, SEHLE_TYPE_RENDERABLE,
 		ARIKKEI_OFFSET (SehleStaticOctreeClass, renderable_impl),
 		ARIKKEI_OFFSET (SehleStaticOctree, renderable_inst));

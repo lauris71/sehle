@@ -37,6 +37,7 @@ sehle_smaa_renderer_get_type (void)
 	static unsigned int type = 0;
 	if (!type) {
 		az_register_type (&type, (const unsigned char *) "SehleSMAARenderer", AZ_TYPE_OBJECT, sizeof (SehleSMAARendererClass), sizeof (SehleSMAARenderer), 0,
+			0, 0,
 			(void (*) (AZClass *)) smaa_renderer_class_init,
 			NULL, NULL);
 	}

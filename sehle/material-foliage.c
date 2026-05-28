@@ -115,6 +115,7 @@ sehle_material_foliage_get_type (void)
 {
 	if (!material_foliage_type) {
 		az_register_type (&material_foliage_type, (const unsigned char *) "SehleMaterialFoliage", AZ_TYPE_BLOCK, sizeof (SehleMaterialFoliageClass), sizeof (SehleMaterialFoliage), AZ_FLAG_ZERO_MEMORY,
+			1, 0,
 			(void (*) (AZClass *)) material_foliage_class_init,
 			(void (*) (const AZImplementation *, void *)) material_foliage_init,
 			NULL);
@@ -126,7 +127,6 @@ sehle_material_foliage_get_type (void)
 static void
 material_foliage_class_init (SehleMaterialFoliageClass *klass)
 {
-	az_class_set_num_interfaces ((AZClass *) klass, 1);
 	az_class_declare_interface ((AZClass *) klass, 0, SEHLE_TYPE_MATERIAL,
 		ARIKKEI_OFFSET(SehleMaterialFoliageClass, material_implementation),
 		ARIKKEI_OFFSET(SehleMaterialFoliage, material_instance));

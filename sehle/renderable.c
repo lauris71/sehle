@@ -22,6 +22,7 @@ sehle_renderable_get_type (void)
 	if (!type) {
 		az_register_interface_type (&type, (const unsigned char *) "SehleRenderable", AZ_TYPE_INTERFACE,
 			sizeof (SehleRenderableClass), sizeof (SehleRenderableImplementation), sizeof (SehleRenderable), AZ_FLAG_ZERO_MEMORY,
+			0, 0,
 			(void (*) (AZClass *)) renderable_class_init,
 			NULL,
 			(void (*) (const AZImplementation *, void *)) renderable_instance_init,

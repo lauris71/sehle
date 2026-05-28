@@ -42,6 +42,7 @@ sehle_point_light_get_type(void)
 	if (!point_light_type) {
 		point_light_class = (SehlePointLightClass *) az_register_interface_type (&point_light_type, (const unsigned char *) "SehlePointLight", SEHLE_TYPE_LIGHT,
 			sizeof (SehlePointLightClass), sizeof (SehlePointLightImplementation), sizeof (SehlePointLightInstance), 0,
+			0, 0,
 			NULL,
 			(void(*) (AZImplementation *)) point_light_implementation_init,
 			NULL, NULL);

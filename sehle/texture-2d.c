@@ -34,6 +34,7 @@ sehle_texture_2d_get_type (void)
 	static unsigned int type = 0;
 	if (!type) {
 		az_register_type (&type, (const unsigned char *) "SehleTexture2D", SEHLE_TYPE_TEXTURE, sizeof (SehleTexture2DClass), sizeof (SehleTexture2D), 0,
+			0, 0,
 			(void (*) (AZClass *)) texture_2d_class_init,
 			(void (*) (const AZImplementation *, void *)) texture_2d_init,
 			(void (*) (const AZImplementation *, void *)) texture_2d_finalize);

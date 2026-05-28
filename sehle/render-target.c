@@ -33,6 +33,7 @@ sehle_render_target_get_type (void)
 	static unsigned int type = 0;
 	if (!type) {
 		AZClass *klass = az_register_type (&type, (const unsigned char *) "SehleRenderTarget", SEHLE_TYPE_RESOURCE, sizeof (SehleRenderTargetClass), sizeof (SehleRenderTarget), 0,
+			0, 0,
 			(void (*) (AZClass *)) render_target_class_init,
 			NULL, NULL);
 		parent_class = (SehleResourceClass *) az_class_parent(klass);

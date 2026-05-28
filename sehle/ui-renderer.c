@@ -34,6 +34,7 @@ sehle_ui_renderer_get_type (void)
 	static unsigned int type = 0;
 	if (!type) {
 		az_register_type (&type, (const unsigned char *) "SehleUIRenderer", AZ_TYPE_OBJECT, sizeof (SehleUIRendererClass), sizeof (SehleUIRenderer), 0,
+			0, 0,
 			(void (*) (AZClass *)) ui_renderer_class_init,
 			(void (*) (const AZImplementation *, void *)) ui_renderer_init,
 			NULL);

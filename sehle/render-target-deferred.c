@@ -34,7 +34,8 @@ sehle_render_target_deferred_get_type (void)
 	static unsigned int type = 0;
 	if (!type) {
 		az_register_type (&type, (const unsigned char *) "SehleRenderTargetDeferred", SEHLE_TYPE_RENDER_TARGET, sizeof (SehleRenderTargetDeferredClass), sizeof (SehleRenderTargetDeferred), 0,
-						(void (*) (AZClass *)) render_target_deferred_class_init,
+				0, 0,
+					(void (*) (AZClass *)) render_target_deferred_class_init,
 						NULL,
 						(void (*) (const AZImplementation *, void *)) render_target_deferred_finalize);
 	}

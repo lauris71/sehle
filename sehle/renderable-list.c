@@ -37,7 +37,8 @@ sehle_renderable_list_get_type (void)
 {
 	if (!group_type) {
 		az_register_type (&group_type, (const unsigned char *) "SehleRenderableList", AZ_TYPE_STRUCT, sizeof (SehleRenderableListClass), sizeof (SehleRenderableList), AZ_FLAG_ZERO_MEMORY,
-						(void (*) (AZClass *)) renderable_list_class_init,
+				1, 0,
+				(void (*) (AZClass *)) renderable_list_class_init,
 						NULL,
 						(void (*) (const AZImplementation *, void *)) renderable_list_finalize);
 		sehle_renderable_list_class = (SehleRenderableListClass *) az_type_get_class (group_type);
@@ -48,7 +49,6 @@ sehle_renderable_list_get_type (void)
 void
 renderable_list_class_init (SehleRenderableListClass *klass)
 {
-	az_class_set_num_interfaces ((AZClass *) klass, 1);
 	az_class_declare_interface ((AZClass *) klass, 0, SEHLE_TYPE_RENDERABLE_COLLECTION,
 		ARIKKEI_OFFSET (SehleRenderableListClass, collection_impl),
 		ARIKKEI_OFFSET (SehleRenderableList, collection_inst));

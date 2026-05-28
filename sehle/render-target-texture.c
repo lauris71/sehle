@@ -34,7 +34,8 @@ sehle_render_target_texture_get_type (void)
 	static unsigned int type = 0;
 	if (!type) {
 		az_register_type (&type, (const unsigned char *) "SehleRenderTargetTexture", SEHLE_TYPE_RENDER_TARGET, sizeof (SehleRenderTargetTextureClass), sizeof (SehleRenderTargetTexture), 0,
-						(void (*) (AZClass *)) render_target_texture_class_init,
+				0, 0,
+					(void (*) (AZClass *)) render_target_texture_class_init,
 						NULL,
 						(void (*) (const AZImplementation *, void *)) render_target_texture_finalize);
 	}

@@ -46,6 +46,7 @@ sehle_directional_light_get_type (void)
 	if (!directional_light_type) {
 		directional_light_class = (SehleDirectionalLightClass *) az_register_interface_type (&directional_light_type, (const unsigned char *) "SehleDirectionalLight", SEHLE_TYPE_LIGHT,
 			sizeof (SehleDirectionalLightClass), sizeof (SehleDirectionalLightImplementation), sizeof (SehleDirectionalLightInstance), 0,
+			0, 0,
 			NULL,
 			(void (*) (AZImplementation *)) directional_light_implementation_init,
 			(void (*) (const AZImplementation *, void *)) directional_light_instance_init,

@@ -18,6 +18,7 @@ sehle_material_reflecting_get_type (void)
 	if (!type) {
 		az_register_interface_type (&type, (const unsigned char *) "SehleMaterialReflecting", SEHLE_TYPE_MATERIAL,
 			sizeof (SehleMaterialReflectingClass), sizeof (SehleMaterialReflectingImplementation), sizeof (SehleMaterialReflectingInstance), 0,
+			0, 0,
 			NULL,
 			(void (*) (AZImplementation *)) material_reflecting_implementation_init,
 			(void (*) (const AZImplementation *, void *)) material_reflecting_instance_init,

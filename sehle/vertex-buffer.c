@@ -26,6 +26,7 @@ sehle_vertex_buffer_get_type (void)
 	static unsigned int type = 0;
 	if (!type) {
 		az_register_type (&type, (const unsigned char *) "SehleVertexBuffer", SEHLE_TYPE_BUFFER, sizeof (SehleVertexBufferClass), sizeof (SehleVertexBuffer), 0,
+			0, 0,
 			NULL, NULL, NULL);
 	}
 	return type;

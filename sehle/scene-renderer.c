@@ -34,6 +34,7 @@ sehle_scene_renderer_get_type (void)
 {
 	if (!scene_renderer_type) {
 		az_register_type (&scene_renderer_type, (const unsigned char *) "SehleSceneRenderer", AZ_TYPE_OBJECT, sizeof (SehleSceneRendererClass), sizeof (SehleSceneRenderer), 0,
+			0, 0,
 			(void (*) (AZClass *)) scene_renderer_class_init,
 			NULL, NULL);
 		scene_renderer_class = (SehleSceneRendererClass *) az_type_get_class (scene_renderer_type);

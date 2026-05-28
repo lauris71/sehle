@@ -85,6 +85,7 @@ sehle_material_control_get_type (void)
 {
 	if (!material_control_type) {
 		az_register_type (&material_control_type, (const unsigned char *) "SehleMaterialControl", AZ_TYPE_BLOCK, sizeof (SehleMaterialControlClass), sizeof (SehleMaterialControl), AZ_FLAG_ZERO_MEMORY,
+			1, 0,
 			(void (*) (AZClass *)) material_control_class_init,
 			(void (*) (const AZImplementation *, void *)) material_control_init,
 			NULL);
@@ -96,7 +97,6 @@ sehle_material_control_get_type (void)
 static void
 material_control_class_init (SehleMaterialControlClass *klass)
 {
-	az_class_set_num_interfaces ((AZClass *) klass, 1);
 	az_class_declare_interface ((AZClass *) klass, 0, SEHLE_TYPE_MATERIAL,
 		ARIKKEI_OFFSET(SehleMaterialControlClass, material_impl),
 		ARIKKEI_OFFSET(SehleMaterialControl, material_inst));

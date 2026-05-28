@@ -24,7 +24,7 @@ sehle_index_buffer_get_type (void)
 {
 	static unsigned int type = 0;
 	if (!type) {
-		az_register_type (&type, (const unsigned char *) "SehleIndexBuffer", SEHLE_TYPE_BUFFER, sizeof (SehleIndexBufferClass), sizeof (SehleIndexBuffer), 0, NULL, NULL, NULL);
+		az_register_type (&type, (const unsigned char *) "SehleIndexBuffer", SEHLE_TYPE_BUFFER, sizeof (SehleIndexBufferClass), sizeof (SehleIndexBuffer), 0, 0, 0, NULL, NULL, NULL);
 	}
 	return type;
 }

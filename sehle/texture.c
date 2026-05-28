@@ -39,6 +39,7 @@ sehle_texture_get_type (void)
 {
 	if (!texture_type) {
 		texture_class = (SehleTextureClass *) az_register_type (&texture_type, (const unsigned char *) "SehleTexture", SEHLE_TYPE_RESOURCE, sizeof (SehleTextureClass), sizeof (SehleTexture), AZ_FLAG_ABSTRACT,
+			0, 0,
 			(void (*) (AZClass *)) texture_class_init,
 			(void (*) (const AZImplementation *, void *)) texture_init,
 			NULL);

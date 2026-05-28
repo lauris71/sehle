@@ -78,6 +78,7 @@ sehle_stars_renderer_get_type (void)
 {
 	if (!sehle_stars_renderer_type) {
 		az_register_type (&sehle_stars_renderer_type, (const unsigned char *) "SehleStarsRenderer", AZ_TYPE_BLOCK, sizeof (SehleStarsRendererClass), sizeof (SehleStarsRenderer), AZ_FLAG_ZERO_MEMORY,
+			2, 0,
 			(void (*) (AZClass *)) stars_class_init,
 			(void (*) (const AZImplementation *, void *)) stars_init,
 			NULL);
@@ -89,7 +90,6 @@ sehle_stars_renderer_get_type (void)
 static void
 stars_class_init (SehleStarsRendererClass *klass)
 {
-	az_class_set_num_interfaces ((AZClass *) klass, 2);
 	az_class_declare_interface (( AZClass *) klass, 0, SEHLE_TYPE_RENDERABLE,
 		ARIKKEI_OFFSET (SehleStarsRendererClass, renderable_impl),
 		ARIKKEI_OFFSET (SehleStarsRenderer, renderable_inst));

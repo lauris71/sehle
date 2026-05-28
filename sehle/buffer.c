@@ -41,6 +41,7 @@ sehle_buffer_get_type (void)
 {
 	if (!buffer_type) {
 		buffer_class = (SehleBufferClass *) az_register_type (&buffer_type, (const unsigned char *) "SehleBuffer", SEHLE_TYPE_RESOURCE, sizeof (SehleBufferClass), sizeof (SehleBuffer), AZ_FLAG_ABSTRACT,
+			0, 0,
 			(void (*) (AZClass *)) buffer_class_init,
 			NULL,
 			(void (*) (const AZImplementation *, void *)) buffer_finalize);

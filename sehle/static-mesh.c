@@ -37,6 +37,7 @@ sehle_static_mesh_get_type (void)
 {
 	if (!sehle_static_mesh_type) {
 		az_register_type (&sehle_static_mesh_type, (const unsigned char *) "SehleStaticMesh", AZ_TYPE_BLOCK, sizeof (SehleStaticMeshClass), sizeof (SehleStaticMesh), AZ_FLAG_ZERO_MEMORY,
+			1, 0,
 			(void (*) (AZClass *)) static_mesh_class_init,
 			(void (*) (const AZImplementation *, void *)) static_mesh_init,
 			(void (*) (const AZImplementation *, void *)) static_mesh_finalize);
@@ -48,7 +49,6 @@ sehle_static_mesh_get_type (void)
 static void
 static_mesh_class_init (SehleStaticMeshClass *klass)
 {
-	az_class_set_num_interfaces ((AZClass *) klass, 1);
 	az_class_declare_interface ((AZClass *) klass, 0, SEHLE_TYPE_RENDERABLE,
 		ARIKKEI_OFFSET(SehleStaticMeshClass, renderable_impl),
 		ARIKKEI_OFFSET(SehleStaticMesh, renderable_inst));

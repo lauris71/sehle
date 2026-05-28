@@ -17,6 +17,7 @@ sehle_renderable_collection_get_type (void)
 	if (!collection_type) {
 		collection_class = (SehleRenderableCollectionClass *) az_register_interface_type (&collection_type, (const unsigned char *) "SehleRenderableCollection", SEHLE_TYPE_RENDERABLE,
 			sizeof (SehleRenderableClass), sizeof (SehleRenderableCollectionImplementation), sizeof (SehleRenderableCollectionInstance), 0,
+			0, 0,
 			NULL, NULL, NULL, NULL);
 	}
 	return collection_type;
